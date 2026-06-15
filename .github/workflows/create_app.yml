@@ -1,72 +1,25 @@
-name: KnoriX Android Build
-
+name: Init Project
 on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
   workflow_dispatch:
-
 jobs:
-  android:
-    name: Android APK Build
+  init:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
         with:
-          node-version: 18
-          
-
-      - name: Install Dependencies
-        run: npm install
-
-      - name: Setup Java
-        uses: actions/setup-java@v4
+          token: ${{ secrets.PAT_TOKEN }}
+      
+      - uses: actions/setup-node@v4
         with:
-          java-version: '17'
-          distribution: 'temurin'
-
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Cache Gradle
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-          restore-keys: |
-            gradle-
-
-      - name: Make Gradlew Executable
-        run: chmod +x android/gradlew
-
-      - name: Build Android Release APK
+          node-version: '22'
+      
+      - name: Create React Native App
         run: |
-          cd android
-          ./gradlew assembleRelease --no-daemon
-
-      - name: Sign APK
-        uses: r0adkll/sign-android-release@v1
-        id: sign_apk
-        with:
-          releaseDirectory: android/app/build/outputs/apk/release
-          signingKeyBase64: ${{ secrets.ANDROID_SIGNING_KEY }}
-          alias: ${{ secrets.ANDROID_KEY_ALIAS }}
-          keyStorePassword: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-          keyPassword: ${{ secrets.ANDROID_KEY_PASSWORD }}
-
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: KnoriX-Android-APK
-          path: ${{ steps.sign_apk.outputs.signedReleaseFile }}
-          retention-days: 7
+          npx @react-native-community/cli init KnoriX
+          cp -r KnoriX/* .
+          rm -rf KnoriX
+          git config user.email "action@github.com"
+          git config user.name "GitHub Action"
+          git add .
+          git commit -m "initiate React Native project"
+          git push
