@@ -1,72 +1,50 @@
-name: KnoriX Android Build
-
+name: Build APK
 on:
   push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
-  workflow_dispatch:
-
+    branches: [main]
 jobs:
-  android:
-    name: Android APK Build
+  build:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 18
-          cache: 'npm'
-
-      - name: Install Dependencies
-        run: npm install
-
-      - name: Setup Java
-        uses: actions/setup-java@v4
+      - uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Cache Gradle
-        uses: actions/cache@v4
+      - uses: actions/setup-node@v4
         with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-          restore-keys: |
-            gradle-
+          node-version: '22'
 
-      - name: Make Gradlew Executable
+      - name: Clean and install dependencies
+        run: |
+          npm cache clean --force
+          rm -rf node_modules
+          npm install --legacy-peer-deps
+
+      - name: Make gradlew executable
         run: chmod +x android/gradlew
 
-      - name: Build Android Release APK
+      - name: Setup Keystore
+        run: |
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/app/minerbuddy-release.keystore
+
+      - name: Build Release APK
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
           cd android
-          ./gradlew assembleRelease --no-daemon
-
-      - name: Sign APK
-        uses: r0adkll/sign-android-release@v1
-        id: sign_apk
-        with:
-          releaseDirectory: android/app/build/outputs/apk/release
-          signingKeyBase64: ${{ secrets.ANDROID_SIGNING_KEY }}
-          alias: ${{ secrets.ANDROID_KEY_ALIAS }}
-          keyStorePassword: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-          keyPassword: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          ./gradlew assembleRelease \
+            -Pandroid.injected.signing.store.file=$GITHUB_WORKSPACE/android/app/minerbuddy-release.keystore \
+            -Pandroid.injected.signing.store.password=$KEYSTORE_PASSWORD \
+            -Pandroid.injected.signing.key.alias=$KEY_ALIAS \
+            -Pandroid.injected.signing.key.password=$KEY_PASSWORD
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: KnoriX-Android-APK
-          path: ${{ steps.sign_apk.outputs.signedReleaseFile }}
-          retention-days: 7
+          name: MinersBuddy-release
+          path: android/app/build/outputs/apk/release/
