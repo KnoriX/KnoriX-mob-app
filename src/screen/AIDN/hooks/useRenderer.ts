@@ -1,187 +1,125 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { useWebSocket }  from './useWebSocket';
-import { useNodeQueue }  from './useNodeQueue';
+import { useCallback, useEffect, useState } from 'react';
+import { useNodeQueue } from './useNodeQueue';
+import { useWebSocket } from './useWebSocket';
+import { fetchLessonPlan } from '../services/lessonService';
+import { ServerMessage } from '../types/websocket.types';
 import { SOCKET_EVENTS } from '../constants/socketEvents';
-import { AnyNodeData }   from '../registry/nodeRegistry';
-
-// ─── Types ───────────────────────────────────────────────────────────────────
-
-export type FeedbackState = 'correct' | 'incorrect' | 'partial' | null;
-
-interface RendererState {
-  current:       AnyNodeData | null;
-  isHandRaised:  boolean;
-  isPaused:      boolean;
-  feedback:      FeedbackState;
-  wsStatus:      'connecting' | 'connected' | 'disconnected' | 'error';
-  isComplete:    boolean;
-}
+import { LessonPlan } from '../types/node.types';
 
 interface UseRendererOptions {
-  wsUrl:     string;
-  lessonId:  string;
+  wsUrl: string;
+  lessonId: string;
   studentId: string;
+  authToken: string;
 }
 
-interface UseRendererReturn extends RendererState {
-  // Node lifecycle
-  handleNodeComplete:  (nodeId: string) => void;
-
-  // Hand raise
-  handleHandRaise:     (nodeId: string) => void;
-  handleResumeLesson:  () => void;
-
-  // MCQ
-  handleMcqSubmit:     (nodeId: string, selectedIds: string[]) => void;
-
-  // WebSocket
-  sendMessage:         (msg: object) => void;
-  reconnect:           () => void;
+interface UseRendererReturn {
+  nodeList: ReturnType<typeof useNodeQueue>['nodeList'];
+  nodes: ReturnType<typeof useNodeQueue>['nodes'];
+  orderedIds: ReturnType<typeof useNodeQueue>['orderedIds'];
+  connectionState: ReturnType<typeof useWebSocket>['connectionState'];
+  lessonPlan: LessonPlan | null;
+  isLoading: boolean;
+  error: string | null;
+  sendInteraction: ReturnType<typeof useWebSocket>['sendInteraction'];
+  ackNode: ReturnType<typeof useWebSocket>['ackNode'];
+  setNodeStatus: ReturnType<typeof useNodeQueue>['setNodeStatus'];
 }
 
-// ─── Hook ────────────────────────────────────────────────────────────────────
+export function useRenderer({
+  wsUrl,
+  lessonId,
+  studentId,
+  authToken,
+}: UseRendererOptions): UseRendererReturn {
+  const [lessonPlan, setLessonPlan] = useState<LessonPlan | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [sessionToken, setSessionToken] = useState('');
 
-export function useRenderer(options: UseRendererOptions): UseRendererReturn {
-  const { wsUrl, lessonId, studentId } = options;
+  const queue = useNodeQueue();
 
-  const [isHandRaised, setIsHandRaised] = useState(false);
-  const [isPaused, setIsPaused]         = useState(false);
-  const [feedback, setFeedback]         = useState<FeedbackState>(null);
-
-  const currentNodeIdRef = useRef<string | null>(null);
-
-  // ── WebSocket ─────────────────────────────────────────────────────────────
-
-  const { status, lastMessage, sendMessage, reconnect } = useWebSocket({
-    url: wsUrl,
-    onOpen: () => {
-      // Identify session on connect
-      sendMessage({
-        type:      SOCKET_EVENTS.SESSION_INIT,
-        lessonId,
-        studentId,
-      });
-    },
-  });
-
-  // ── Node Queue ────────────────────────────────────────────────────────────
-
-  const { current, queue, isComplete, enqueue, completeNode, reset } =
-    useNodeQueue();
-
-  // ── Handle Incoming WebSocket Messages ────────────────────────────────────
-
+  // ─── Step 1: Fetch initial lesson plan via REST ──────────────────────────
   useEffect(() => {
-    if (!lastMessage) return;
+    let cancelled = false;
 
-    switch (lastMessage.type) {
+    async function load() {
+      try {
+        setIsLoading(true);
+        setError(null);
+        const plan = await fetchLessonPlan({ lessonId, studentId, authToken });
 
-      // Backend pushes next node
-      case SOCKET_EVENTS.NODE_PUSH: {
-        enqueue(lastMessage.payload);
-        break;
+        if (cancelled) return;
+
+        setLessonPlan(plan);
+        setSessionToken(plan.sessionToken);
+        queue.initFromRaw(plan.nodes as unknown as unknown[]);
+      } catch (e: unknown) {
+        if (!cancelled) {
+          const msg = e instanceof Error ? e.message : 'Failed to load lesson';
+          setError(msg);
+        }
+      } finally {
+        if (!cancelled) setIsLoading(false);
       }
+    }
 
-      // Backend sends MCQ feedback
-      case SOCKET_EVENTS.MCQ_FEEDBACK: {
-        setFeedback(lastMessage.result as FeedbackState);
-        break;
-      }
+    load();
+    return () => { cancelled = true; };
+  }, [lessonId, studentId, authToken]); // eslint-disable-line react-hooks/exhaustive-deps
 
-      // Backend resumes lesson after doubt solved
-      case SOCKET_EVENTS.DOUBT_RESOLVED: {
-        setIsHandRaised(false);
-        setIsPaused(false);
+  // ─── Step 2: Handle incoming WS messages ─────────────────────────────────
+  const handleMessage = useCallback((msg: ServerMessage) => {
+    switch (msg.event) {
+      case SOCKET_EVENTS.NODE_PUSH:
+        queue.addNode(msg.payload as Record<string, unknown>);
         break;
-      }
 
-      // Backend signals lesson end
-      case SOCKET_EVENTS.LESSON_COMPLETE: {
-        reset();
+      case SOCKET_EVENTS.NODE_UPDATE:
+        queue.updateNode(msg.payload.nodeId, msg.payload.patch);
         break;
-      }
+
+      case SOCKET_EVENTS.NODE_REMOVE:
+        queue.removeNode(msg.payload.nodeId);
+        break;
+
+      case SOCKET_EVENTS.LAYOUT_UPDATE:
+        queue.updateNode(msg.payload.nodeId, { layout: msg.payload.layout });
+        break;
+
+      case SOCKET_EVENTS.SESSION_END:
+        console.log('[AIDN] Session ended:', msg.payload.reason);
+        break;
+
+      case SOCKET_EVENTS.ERROR:
+        setError(msg.payload.message);
+        break;
 
       default:
         break;
     }
-  }, [lastMessage]);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Track current node id ─────────────────────────────────────────────────
-
-  useEffect(() => {
-    if (current) {
-      currentNodeIdRef.current = current.id;
-      // Reset feedback when new node loads
-      setFeedback(null);
-    }
-  }, [current]);
-
-  // ── Node Complete ─────────────────────────────────────────────────────────
-
-  const handleNodeComplete = useCallback((nodeId: string) => {
-    completeNode(nodeId);
-
-    // Tell backend — it decides what comes next
-    sendMessage({
-      type:      SOCKET_EVENTS.NODE_COMPLETE,
-      nodeId,
-      lessonId,
-      studentId,
-    });
-  }, [completeNode, sendMessage, lessonId, studentId]);
-
-  // ── Hand Raise ────────────────────────────────────────────────────────────
-
-  const handleHandRaise = useCallback((nodeId: string) => {
-    setIsHandRaised(true);
-    setIsPaused(true);
-
-    sendMessage({
-      type:      SOCKET_EVENTS.HAND_RAISE,
-      nodeId,
-      lessonId,
-      studentId,
-    });
-  }, [sendMessage, lessonId, studentId]);
-
-  const handleResumeLesson = useCallback(() => {
-    setIsHandRaised(false);
-    setIsPaused(false);
-
-    sendMessage({
-      type:      SOCKET_EVENTS.LESSON_RESUME,
-      lessonId,
-      studentId,
-    });
-  }, [sendMessage, lessonId, studentId]);
-
-  // ── MCQ Submit ────────────────────────────────────────────────────────────
-
-  const handleMcqSubmit = useCallback((nodeId: string, selectedIds: string[]) => {
-    sendMessage({
-      type:      SOCKET_EVENTS.MCQ_SUBMIT,
-      nodeId,
-      selectedIds,
-      lessonId,
-      studentId,
-    });
-    // Backend will respond with MCQ_FEEDBACK event
-  }, [sendMessage, lessonId, studentId]);
-
-  // ── Return ────────────────────────────────────────────────────────────────
+  // ─── Step 3: Connect WS (enabled only after plan is loaded) ──────────────
+  const { connectionState, sendInteraction, ackNode } = useWebSocket({
+    url: wsUrl,
+    lessonId,
+    sessionToken,
+    studentId,
+    onMessage: handleMessage,
+    enabled: !!sessionToken,
+  });
 
   return {
-    current,
-    isHandRaised,
-    isPaused,
-    feedback,
-    wsStatus:           status,
-    isComplete,
-    handleNodeComplete,
-    handleHandRaise,
-    handleResumeLesson,
-    handleMcqSubmit,
-    sendMessage,
-    reconnect,
+    nodeList: queue.nodeList,
+    nodes: queue.nodes,
+    orderedIds: queue.orderedIds,
+    connectionState,
+    lessonPlan,
+    isLoading,
+    error,
+    sendInteraction,
+    ackNode,
+    setNodeStatus: queue.setNodeStatus,
   };
 }
