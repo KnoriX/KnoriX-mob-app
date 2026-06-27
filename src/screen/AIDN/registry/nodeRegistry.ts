@@ -1,4 +1,62 @@
 import React from 'react';
+import { NODE_TYPES, NodeType } from '../constants/nodeTypes';
+import { AIDNNode } from '../types/node.types';
+
+// ─── Lazy imports (code-split each module) ────────────────────────────────
+// Replace with your actual component imports
+
+const MarkdownNode = React.lazy(() => import('../modules/markdown/markdownNode'));
+const MCQNode      = React.lazy(() => import('../modules/MCQ/mcqNode'));
+const VideoNode    = React.lazy(() => import('../modules/video/videoNode'));
+const KatexNode    = React.lazy(() => import('../modules/KaTex/formulaNode'));
+const MermaidNode  = React.lazy(() => import('../modules/Mermaid/mermaidNode'));
+const SkiaNode     = React.lazy(() => import('../modules/Skia/skiaNode'));
+const SvgNode      = React.lazy(() => import('../modules/svg/svgNode'));
+const AudioNode    = React.lazy(() => import('../modules/AudioNode'));
+const RealtimeNode = React.lazy(() => import('../modules/websockte/RealtimeNode'));
+
+// ─── Registry map ─────────────────────────────────────────────────────────
+
+type NodeComponent = React.ComponentType<{ node: AIDNNode; onDone?: () => void }>;
+
+const NODE_REGISTRY: Record<NodeType, NodeComponent> = {
+  [NODE_TYPES.MARKDOWN]: MarkdownNode as unknown as NodeComponent,
+  [NODE_TYPES.MCQ]:      MCQNode      as unknown as NodeComponent,
+  [NODE_TYPES.VIDEO]:    VideoNode    as unknown as NodeComponent,
+  [NODE_TYPES.KATEX]:    KatexNode    as unknown as NodeComponent,
+  [NODE_TYPES.MERMAID]:  MermaidNode  as unknown as NodeComponent,
+  [NODE_TYPES.SKIA]:     SkiaNode     as unknown as NodeComponent,
+  [NODE_TYPES.SVG]:      SvgNode      as unknown as NodeComponent,
+  [NODE_TYPES.AUDIO]:    AudioNode    as unknown as NodeComponent,
+  [NODE_TYPES.REALTIME]: RealtimeNode as unknown as NodeComponent,
+};
+
+/**
+ * Resolve node type string → React component.
+ * Returns null if type is unregistered (canvas will show fallback).
+ */
+export function resolveNode(type: NodeType): NodeComponent | null {
+  return NODE_REGISTRY[type] ?? null;
+}
+
+/**
+ * Check if a node type is supported in the registry.
+ */
+export function isNodeSupported(type: string): type is NodeType {
+  return type in NODE_REGISTRY;
+}
+
+export default NODE_REGISTRY;
+
+
+
+
+
+
+
+
+
+/** import React from 'react';
 
 // ─── Node Components ──────────────────────────────────────────────────────────
 import VideoNode,    { VideoNodeData }    from '../modules/VideoNode';
@@ -199,3 +257,4 @@ export function getRegisteredTypes(): string[] {
 }
 
 export default NODE_REGISTRY;
+*/
