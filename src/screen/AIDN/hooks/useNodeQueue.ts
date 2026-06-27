@@ -1,136 +1,118 @@
-import { useCallback, useReducer, useRef } from 'react';
-import { validateNode, AnyNodeData } from '../registry/nodeRegistry';
+import { useReducer, useCallback } from 'react';
+import { AIDNNode } from '../types/node.types';
+import { RendererNode } from '../types/node.types';
+import { parseNodes, patchNode, parseNode } from '../utils/nodeParser';
 
-// ─── Types ───────────────────────────────────────────────────────────────────
+// ─── State & Actions ──────────────────────────────────────────────────────
 
 interface NodeQueueState {
-  queue:      AnyNodeData[];   // pending nodes
-  current:    AnyNodeData | null;
-  history:    AnyNodeData[];   // completed nodes
-  isComplete: boolean;         // lesson complete
+  nodes: Record<string, RendererNode>; // id → node (O(1) lookup)
+  orderedIds: string[];                // ordered array of ids for render order
 }
 
 type NodeQueueAction =
-  | { type: 'ENQUEUE';  payload: AnyNodeData   }
-  | { type: 'COMPLETE'; nodeId: string          }
-  | { type: 'RESET'                             }
-  | { type: 'LESSON_COMPLETE'                   };
+  | { type: 'INIT'; raw: unknown[] }
+  | { type: 'ADD'; node: AIDNNode }
+  | { type: 'UPDATE'; nodeId: string; patch: Partial<AIDNNode> }
+  | { type: 'REMOVE'; nodeId: string }
+  | { type: 'SET_STATUS'; nodeId: string; status: RendererNode['status'] }
+  | { type: 'RESET' };
 
-interface UseNodeQueueReturn {
-  current:       AnyNodeData | null;
-  queue:         AnyNodeData[];
-  history:       AnyNodeData[];
-  isComplete:    boolean;
-  enqueue:       (rawPayload: unknown) => void;
-  completeNode:  (nodeId: string) => void;
-  reset:         () => void;
-}
-
-// ─── Initial State ────────────────────────────────────────────────────────────
-
-const INITIAL_STATE: NodeQueueState = {
-  queue:      [],
-  current:    null,
-  history:    [],
-  isComplete: false,
-};
-
-// ─── Reducer ──────────────────────────────────────────────────────────────────
-
-function nodeQueueReducer(
-  state: NodeQueueState,
-  action: NodeQueueAction
-): NodeQueueState {
-
+function reducer(state: NodeQueueState, action: NodeQueueAction): NodeQueueState {
   switch (action.type) {
-
-    case 'ENQUEUE': {
-      const node = action.payload;
-
-      // If nothing is playing — set as current directly
-      if (!state.current) {
-        return { ...state, current: node };
+    case 'INIT': {
+      const parsed = parseNodes(action.raw);
+      const nodes: Record<string, RendererNode> = {};
+      const orderedIds: string[] = [];
+      for (const n of parsed) {
+        nodes[n.id] = { ...n, status: 'pending' };
+        orderedIds.push(n.id);
       }
-
-      // Otherwise push to queue
-      return { ...state, queue: [...state.queue, node] };
+      return { nodes, orderedIds };
     }
 
-    case 'COMPLETE': {
-      // Move completed node to history
-      const completed = state.current;
-      if (!completed || completed.id !== action.nodeId) return state;
+    case 'ADD': {
+      if (state.nodes[action.node.id]) return state; // dedupe
+      const rendererNode: RendererNode = { ...action.node, status: 'pending' };
+      const newNodes = { ...state.nodes, [action.node.id]: rendererNode };
+      // Insert at correct position by order field
+      const newIds = [...state.orderedIds, action.node.id].sort(
+        (a, b) => (newNodes[a]?.order ?? 0) - (newNodes[b]?.order ?? 0),
+      );
+      return { nodes: newNodes, orderedIds: newIds };
+    }
 
-      // Pull next from queue
-      const [next, ...remaining] = state.queue;
+    case 'UPDATE': {
+      const existing = state.nodes[action.nodeId];
+      if (!existing) return state;
+      const updated = patchNode(existing, action.patch) as RendererNode;
+      return { ...state, nodes: { ...state.nodes, [action.nodeId]: updated } };
+    }
 
+    case 'REMOVE': {
+      const { [action.nodeId]: _removed, ...remaining } = state.nodes;
       return {
-        ...state,
-        current: next ?? null,
-        queue:   remaining,
-        history: completed ? [...state.history, completed] : state.history,
+        nodes: remaining,
+        orderedIds: state.orderedIds.filter(id => id !== action.nodeId),
       };
     }
 
-    case 'LESSON_COMPLETE': {
-      return { ...state, isComplete: true };
+    case 'SET_STATUS': {
+      const node = state.nodes[action.nodeId];
+      if (!node) return state;
+      return {
+        ...state,
+        nodes: { ...state.nodes, [action.nodeId]: { ...node, status: action.status } },
+      };
     }
 
-    case 'RESET': {
-      return INITIAL_STATE;
-    }
+    case 'RESET':
+      return { nodes: {}, orderedIds: [] };
 
     default:
       return state;
   }
 }
 
-// ─── Hook ────────────────────────────────────────────────────────────────────
+// ─── Hook ─────────────────────────────────────────────────────────────────
 
-export function useNodeQueue(): UseNodeQueueReturn {
-  const [state, dispatch] = useReducer(nodeQueueReducer, INITIAL_STATE);
-  const processedIds      = useRef<Set<string>>(new Set()); // dedupe
+export function useNodeQueue() {
+  const [state, dispatch] = useReducer(reducer, { nodes: {}, orderedIds: [] });
 
-  // ── Enqueue — validates + dedupes incoming WebSocket payloads ─────────────
-
-  const enqueue = useCallback((rawPayload: unknown) => {
-    const node = validateNode(rawPayload);
-
-    if (!node) {
-      console.warn('[useNodeQueue] Invalid node payload — dropped:', rawPayload);
-      return;
-    }
-
-    // Dedupe — same node id should never render twice
-    if (processedIds.current.has(node.id)) {
-      console.warn('[useNodeQueue] Duplicate node id — dropped:', node.id);
-      return;
-    }
-
-    processedIds.current.add(node.id);
-    dispatch({ type: 'ENQUEUE', payload: node });
+  const initFromRaw = useCallback((rawNodes: unknown[]) => {
+    dispatch({ type: 'INIT', raw: rawNodes });
   }, []);
 
-  // ── Complete — called by node when done ───────────────────────────────────
-
-  const completeNode = useCallback((nodeId: string) => {
-    dispatch({ type: 'COMPLETE', nodeId });
+  const addNode = useCallback((rawNode: Record<string, unknown>) => {
+    const parsed = parseNode(rawNode);
+    if (parsed) dispatch({ type: 'ADD', node: parsed });
   }, []);
 
-  // ── Reset — new lesson ────────────────────────────────────────────────────
+  const updateNode = useCallback((nodeId: string, patch: Partial<AIDNNode>) => {
+    dispatch({ type: 'UPDATE', nodeId, patch });
+  }, []);
+
+  const removeNode = useCallback((nodeId: string) => {
+    dispatch({ type: 'REMOVE', nodeId });
+  }, []);
+
+  const setNodeStatus = useCallback((nodeId: string, status: RendererNode['status']) => {
+    dispatch({ type: 'SET_STATUS', nodeId, status });
+  }, []);
 
   const reset = useCallback(() => {
-    processedIds.current.clear();
     dispatch({ type: 'RESET' });
   }, []);
 
   return {
-    current:      state.current,
-    queue:        state.queue,
-    history:      state.history,
-    isComplete:   state.isComplete,
-    enqueue,
-    completeNode,
+    nodes: state.nodes,
+    orderedIds: state.orderedIds,
+    nodeList: state.orderedIds.map(id => state.nodes[id]).filter(Boolean) as RendererNode[],
+    initFromRaw,
+    addNode,
+    updateNode,
+    removeNode,
+    setNodeStatus,
     reset,
   };
 }
