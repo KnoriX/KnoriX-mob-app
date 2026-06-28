@@ -1,10 +1,13 @@
 name: Build APK
+
 on:
   push:
     branches: [main]
+
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
 
@@ -16,6 +19,19 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+
+      # ── Fix: Install correct CMake version for Reanimated 3.x + Skia ────────
+      - name: Setup Android SDK cmake
+        run: |
+          echo "y" | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager "cmake;3.28.0"
+          echo "ANDROID_CMAKE=$ANDROID_SDK_ROOT/cmake/3.28.0/bin" >> $GITHUB_ENV
+
+      # ── Fix: Install NDK explicitly ───────────────────────────────────────────
+      - name: Setup Android NDK
+        run: |
+          echo "y" | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager "ndk;27.1.12297006"
+          echo "ANDROID_NDK_HOME=$ANDROID_SDK_ROOT/ndk/27.1.12297006" >> $GITHUB_ENV
+          echo "ANDROID_NDK=$ANDROID_SDK_ROOT/ndk/27.1.12297006" >> $GITHUB_ENV
 
       - name: Clean and install dependencies
         run: |
@@ -46,5 +62,5 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: MinersBuddy-release
+          name: KnoriX-release
           path: android/app/build/outputs/apk/release/
