@@ -1,211 +1,417 @@
-import React, { Suspense, useCallback, useRef } from 'react';
+/**
+ * KnoriX — RenderScreen
+ * src/screens/AIDN/RenderScreen.tsx
+ *
+ * The main AIDN canvas.
+ * Loads a lesson JSON → plays nodes in sequence via timeline.
+ * WebSocket receives inject_node / pause / resume events.
+ */
+
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   View,
+  StyleSheet,
   ScrollView,
-  Animated,
   Text,
+  TouchableOpacity,
   ActivityIndicator,
-  SafeAreaView,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { useRenderer } from './hooks/useRenderer';
-import { resolveNode } from './registry/nodeRegistry';
-import { getNodeDimensions, createFadeIn, groupNodeIds, NodeGroup } from './utils/rendererHelpers';
-import { LAYOUT_MODES } from './constants/nodeTypes';
-import { RendererNode } from './types/node.types';
-import { renderStyles, WS_BADGE_COLORS } from './styles/renderStyle';
+// ─── Node components ──────────────────────────────────────────────────────────
+import MarkdownNode  from '../../modules/nodes/markdown/MarkdownNode';
+import MCQNode       from '../../modules/nodes/mcq/MCQNode';
+import SVGNode       from '../../modules/nodes/svg/SvgNode';
+import KaTeXNode     from '../../modules/nodes/katex/KaTexNode';
+import MermaidNode   from '../../modules/nodes/mermaid/MermaidNode';
+import SkiaNode      from '../../modules/nodes/skia/SkiaNode';
+import VideoNode     from '../../modules/nodes/video/VideoNode';
 
-// ─── Props ────────────────────────────────────────────────────────────────
+// ─── Types ────────────────────────────────────────────────────────────────────
+import type { AIDNNode } from '../../types/node.types';
 
-interface RenderScreenProps {
-  wsUrl: string;
-  lessonId: string;
-  studentId: string;
-  authToken: string;
-}
+// ─── Demo lesson JSON (replace with API call later) ───────────────────────────
+const DEMO_LESSON: AIDNNode[] = [
+  {
+    id: 'n1',
+    node_type: 'markdown',
+    meta: { title: 'Python Inheritance' },
+    payload: {
+      content: `# Python Inheritance\n\nInheritance ek concept hai jisme ek class **doosri class ki properties** le sakti hai.\n\n## Example\n\n\`\`\`python\nclass Animal:\n    def speak(self):\n        print("...")\n\nclass Dog(Animal):\n    def speak(self):\n        print("Woof!")\n\`\`\`\n\n> Dog class Animal se inherit karti hai. Isliye Dog ke paas Animal ke saare methods hain.`,
+    },
+  },
+  {
+    id: 'n2',
+    node_type: 'svg',
+    meta: { title: 'Class Hierarchy' },
+    payload: {
+      renderMode: 'svg',
+      svgString: `<svg viewBox="0 0 400 220" xmlns="http://www.w3.org/2000/svg" style="background:#0A0A0F">
+        <defs>
+          <marker id="arrow" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" fill="#7C6FFF"/>
+          </marker>
+        </defs>
+        <rect x="140" y="20" width="120" height="50" rx="10" fill="#1E1E2E" stroke="#7C6FFF" stroke-width="2"/>
+        <text x="200" y="42" text-anchor="middle" fill="#E8E8F0" font-size="13" font-weight="bold">Animal</text>
+        <text x="200" y="60" text-anchor="middle" fill="#7C6FFF" font-size="11">speak()</text>
+        <line x1="140" y1="95" x2="80" y2="145" stroke="#7C6FFF" stroke-width="1.5" marker-end="url(#arrow)"/>
+        <line x1="260" y1="95" x2="320" y2="145" stroke="#7C6FFF" stroke-width="1.5" marker-end="url(#arrow)"/>
+        <rect x="20" y="145" width="120" height="50" rx="10" fill="#1E1E2E" stroke="#059669" stroke-width="2"/>
+        <text x="80" y="167" text-anchor="middle" fill="#E8E8F0" font-size="13" font-weight="bold">Dog</text>
+        <text x="80" y="185" text-anchor="middle" fill="#059669" font-size="11">speak() → Woof</text>
+        <rect x="260" y="145" width="120" height="50" rx="10" fill="#1E1E2E" stroke="#D97706" stroke-width="2"/>
+        <text x="320" y="167" text-anchor="middle" fill="#E8E8F0" font-size="13" font-weight="bold">Cat</text>
+        <text x="320" y="185" text-anchor="middle" fill="#D97706" font-size="11">speak() → Meow</text>
+      </svg>`,
+      caption: 'Dog aur Cat dono Animal se inherit karte hain',
+      highlights: [],
+      tapZones: [],
+    },
+  },
+  {
+    id: 'n3',
+    node_type: 'mcq',
+    meta: { title: 'Quick Check' },
+    payload: {
+      mode: 'single',
+      question: 'Agar Dog class Animal se inherit karti hai, toh kya Dog ke paas speak() method hoga?',
+      options: [
+        { id: 'a', text: 'Haan, automatically inherit hoga' },
+        { id: 'b', text: 'Nahi, manually define karna padega' },
+        { id: 'c', text: 'Sirf tabhi agar Dog khud define kare' },
+        { id: 'd', text: 'Inheritance se methods nahi milte' },
+      ],
+      correctIds: ['a'],
+      explanation: 'Bilkul sahi! Inheritance mein child class automatically parent class ke saare methods aur properties le leti hai. Dog ko speak() inherit milta hai Animal se.',
+      timeLimit: 30,
+      tags: ['inheritance', 'python', 'oop'],
+    },
+  },
+  {
+    id: 'n4',
+    node_type: 'katex',
+    meta: { title: 'Formula' },
+    payload: {
+      id: 'n4',
+      displayMode: 'single',
+      formulas: [
+        {
+          id: 'f1',
+          latex: 'Child\\ Class \\supseteq Parent\\ Class',
+          label: 'Inheritance Rule',
+        },
+      ],
+      caption: 'Child class mein parent ki saari properties hoti hain',
+      accentColor: '#7C6FFF',
+      animation: { mode: 'instant' },
+    },
+  },
+  {
+    id: 'n5',
+    node_type: 'mermaid',
+    meta: { title: 'MRO Flow' },
+    payload: {
+      mermaidSrc: `graph TD
+        A[super() call] --> B{Method Resolution Order}
+        B --> C[Child Class]
+        C --> D[Parent Class]
+        D --> E[Grandparent Class]
+        E --> F[object]
+        style A fill:#7C6FFF,color:#fff
+        style B fill:#1E1E2E,color:#E8E8F0
+        style F fill:#059669,color:#fff`,
+      caption: 'Python MRO: C3 Linearization algorithm follow karta hai',
+      highlights: [],
+    },
+  },
+];
 
-// ─── Single animated node wrapper ─────────────────────────────────────────
+// ─── NodeRenderer — the switch-case core ─────────────────────────────────────
 
-interface NodeCellProps {
-  node: RendererNode;
+function NodeRenderer({
+  node,
+  onDone,
+}: {
+  node: AIDNNode;
   onDone: () => void;
+}) {
+  switch (node.node_type) {
+    case 'markdown':
+      return <MarkdownNode node={node} onDone={onDone} />;
+
+    case 'mcq':
+      return <MCQNode node={node} onDone={onDone} />;
+
+    case 'svg':
+      return <SVGNode node={node} onDone={onDone} />;
+
+    case 'katex':
+      return (
+        <KaTeXNode
+          payload={node.payload as any}
+          onDone={onDone}
+          onSkip={onDone}
+          sendEvent={(e) => console.log('[KaTeX Event]', e)}
+        />
+      );
+
+    case 'mermaid':
+      return (
+        <MermaidNode
+          payload={node.payload as any}
+          onDone={onDone}
+          onSkip={onDone}
+          sendEvent={(e) => console.log('[Mermaid Event]', e)}
+        />
+      );
+
+    case 'skia':
+      return (
+        <SkiaNode
+          payload={node.payload as any}
+          onDone={onDone}
+          onSkip={onDone}
+          sendEvent={(e) => console.log('[Skia Event]', e)}
+        />
+      );
+
+    case 'video':
+      return <VideoNode node={node} onDone={onDone} />;
+
+    default:
+      console.warn('[RenderScreen] Unknown node_type:', node.node_type);
+      onDone();
+      return null;
+  }
 }
 
-const NodeCell = React.memo(({ node, onDone }: NodeCellProps) => {
-  const { opacity, start } = createFadeIn(350);
-  const hasStarted = useRef(false);
+// ─── RenderScreen ─────────────────────────────────────────────────────────────
 
-  if (!hasStarted.current) {
-    hasStarted.current = true;
-    start();
+export default function RenderScreen() {
+  const [nodes, setNodes]           = useState<AIDNNode[]>(DEMO_LESSON);
+  const [currentIndex, setIndex]    = useState(0);
+  const [isLoading, setIsLoading]   = useState(false);
+  const [lessonDone, setLessonDone] = useState(false);
+  const [isPaused, setIsPaused]     = useState(false);
+
+  const currentNode = nodes[currentIndex];
+  const progress    = nodes.length > 0 ? (currentIndex / nodes.length) : 0;
+
+  // ── Move to next node ──
+  const handleNodeDone = useCallback(() => {
+    if (currentIndex >= nodes.length - 1) {
+      setLessonDone(true);
+      return;
+    }
+    setIndex(prev => prev + 1);
+  }, [currentIndex, nodes.length]);
+
+  // ── WebSocket inject_node handler (wire to your wsService later) ──
+  const injectNode = useCallback((newNode: AIDNNode) => {
+    setNodes(prev => {
+      const updated = [...prev];
+      updated.splice(currentIndex + 1, 0, newNode);
+      return updated;
+    });
+  }, [currentIndex]);
+
+  // ── Restart lesson ──
+  const restart = () => {
+    setIndex(0);
+    setLessonDone(false);
+  };
+
+  // ─── Lesson Complete Screen ───────────────────────────────────────────────
+  if (lessonDone) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.doneScreen}>
+          <Text style={styles.doneEmoji}>🎉</Text>
+          <Text style={styles.doneTitle}>Lesson Complete!</Text>
+          <Text style={styles.doneSub}>
+            Tumne {nodes.length} nodes complete kiye.{'\n'}
+            Knowledge Graph update ho raha hai...
+          </Text>
+          <TouchableOpacity style={styles.restartBtn} onPress={restart}>
+            <Text style={styles.restartText}>↺  Restart Lesson</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
   }
 
-  const Component = resolveNode(node.type);
-  const dims = getNodeDimensions(node.layout);
-
-  if (!Component) {
+  // ─── Loading ──────────────────────────────────────────────────────────────
+  if (isLoading || !currentNode) {
     return (
-      <View style={renderStyles.fallbackContainer}>
-        <Text style={renderStyles.fallbackText}>
-          ⚠ Unknown node type: {node.type}
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingScreen}>
+          <ActivityIndicator size="large" color="#7C6FFF" />
+          <Text style={styles.loadingText}>Loading lesson...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // ─── Main Canvas ──────────────────────────────────────────────────────────
+  return (
+    <SafeAreaView style={styles.container}>
+
+      {/* Header */}
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>
+          {currentNode.meta?.title ?? 'KnoriX'}
+        </Text>
+        <Text style={styles.headerCounter}>
+          {currentIndex + 1} / {nodes.length}
         </Text>
       </View>
-    );
-  }
 
-  const isOverlay = node.layout === LAYOUT_MODES.OVERLAY;
+      {/* Progress bar */}
+      <View style={styles.progressTrack}>
+        <View style={[styles.progressFill, { width: `${progress * 100}%` }]} />
+      </View>
 
-  return (
-    <Animated.View
-      style={[
-        renderStyles.nodeWrapper,
-        isOverlay ? renderStyles.overlayWrapper : null,
-        {
-          width: dims.width,
-          alignSelf: dims.alignSelf,
-          marginHorizontal: dims.marginHorizontal,
-          marginVertical: dims.marginVertical,
-          borderRadius: dims.borderRadius,
-          opacity,
-        },
-      ]}
-    >
-      <Suspense fallback={<ActivityIndicator color="#6C63FF" style={{ padding: 24 }} />}>
-        <Component node={node} onDone={onDone} />
-      </Suspense>
-    </Animated.View>
-  );
-});
-
-NodeCell.displayName = 'NodeCell';
-
-// ─── WS status badge ──────────────────────────────────────────────────────
-
-interface WSBadgeProps {
-  state: string;
-}
-
-const WSBadge = ({ state }: WSBadgeProps) => {
-  const colors = WS_BADGE_COLORS[state] ?? WS_BADGE_COLORS.disconnected;
-  const label = {
-    connected: '● LIVE',
-    connecting: '◌ CONNECTING',
-    disconnected: '○ OFFLINE',
-    error: '✕ ERROR',
-  }[state] ?? state.toUpperCase();
-
-  return (
-    <View style={[renderStyles.wsBadge, { backgroundColor: colors.bg }]}>
-      <Text style={[renderStyles.wsBadgeText, { color: colors.text }]}>{label}</Text>
-    </View>
-  );
-};
-
-// ─── Main Canvas ──────────────────────────────────────────────────────────
-
-export default function RenderScreen({
-  wsUrl,
-  lessonId,
-  studentId,
-  authToken,
-}: RenderScreenProps) {
-  const {
-    nodeList,
-    nodes,
-    orderedIds,
-    connectionState,
-    isLoading,
-    error,
-    ackNode,
-    setNodeStatus,
-  } = useRenderer({ wsUrl, lessonId, studentId, authToken });
-
-  // Build layout → id map for grouping
-  const layoutMap = Object.fromEntries(
-    orderedIds.map(id => [id, nodes[id]?.layout ?? LAYOUT_MODES.FULL]),
-  );
-  const groups: NodeGroup[] = groupNodeIds(orderedIds, layoutMap);
-
-  const handleNodeDone = useCallback((nodeId: string, durationMs: number) => {
-    setNodeStatus(nodeId, 'done');
-    ackNode({ nodeId, timeSpent: Math.round(durationMs / 1000) });
-  }, [ackNode, setNodeStatus]);
-
-  // ─── Loading state ───────────────────────────────────────────────────────
-  if (isLoading) {
-    return (
-      <SafeAreaView style={renderStyles.canvas}>
-        <View style={renderStyles.loadingContainer}>
-          <ActivityIndicator size="large" color="#6C63FF" />
-          <Text style={renderStyles.loadingText}>Loading lesson...</Text>
-        </View>
-      </SafeAreaView>
-    );
-  }
-
-  // ─── Error state ─────────────────────────────────────────────────────────
-  if (error) {
-    return (
-      <SafeAreaView style={renderStyles.canvas}>
-        <View style={renderStyles.errorContainer}>
-          <Text style={renderStyles.errorTitle}>Failed to load</Text>
-          <Text style={renderStyles.errorMessage}>{error}</Text>
-        </View>
-      </SafeAreaView>
-    );
-  }
-
-  // ─── Main canvas ──────────────────────────────────────────────────────────
-  return (
-    <SafeAreaView style={renderStyles.canvas}>
-      <WSBadge state={connectionState} />
-
+      {/* Node Canvas */}
       <ScrollView
-        style={renderStyles.canvas}
-        contentContainerStyle={renderStyles.scrollContent}
+        style={styles.canvas}
+        contentContainerStyle={styles.canvasContent}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
       >
-        {groups.map((group) => {
-          if (group.kind === 'pair') {
-            // Side-by-side HALF layout nodes
-            const [idA, idB] = group.nodeIds;
-            const nodeA = nodes[idA];
-            const nodeB = nodes[idB];
-            if (!nodeA || !nodeB) return null;
-
-            return (
-              <View key={`pair-${idA}-${idB}`} style={renderStyles.row}>
-                <NodeCell
-                  node={nodeA}
-                  onDone={() => handleNodeDone(idA, 0)}
-                />
-                <NodeCell
-                  node={nodeB}
-                  onDone={() => handleNodeDone(idB, 0)}
-                />
-              </View>
-            );
-          }
-
-          // Single node (full / card / overlay)
-          const node = nodes[group.nodeId];
-          if (!node) return null;
-
-          return (
-            <NodeCell
-              key={node.id}
-              node={node}
-              onDone={() => handleNodeDone(node.id, (node.meta?.duration ?? 0) * 1000)}
-            />
-          );
-        })}
-
-        {nodeList.length === 0 && (
-          <View style={renderStyles.loadingContainer}>
-            <Text style={renderStyles.loadingText}>Waiting for content...</Text>
-          </View>
-        )}
+        <NodeRenderer
+          key={currentNode.id}
+          node={currentNode}
+          onDone={handleNodeDone}
+        />
       </ScrollView>
+
+      {/* Dev helper: node type badge */}
+      <View style={styles.devBadge}>
+        <Text style={styles.devBadgeText}>
+          {currentNode.node_type.toUpperCase()}
+        </Text>
+      </View>
+
     </SafeAreaView>
   );
 }
+
+// ─── Styles ───────────────────────────────────────────────────────────────────
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#0A0A0F',
+  },
+
+  // Header
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#1E1E2E',
+  },
+  headerTitle: {
+    color: '#E8E8F0',
+    fontSize: 16,
+    fontWeight: '700',
+    letterSpacing: 0.3,
+  },
+  headerCounter: {
+    color: '#6B6B8A',
+    fontSize: 13,
+    fontFamily: 'System',
+  },
+
+  // Progress
+  progressTrack: {
+    height: 2,
+    backgroundColor: '#1E1E2E',
+  },
+  progressFill: {
+    height: 2,
+    backgroundColor: '#7C6FFF',
+  },
+
+  // Canvas
+  canvas: {
+    flex: 1,
+  },
+  canvasContent: {
+    paddingVertical: 20,
+    paddingHorizontal: 4,
+  },
+
+  // Done screen
+  doneScreen: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 32,
+  },
+  doneEmoji: {
+    fontSize: 64,
+    marginBottom: 16,
+  },
+  doneTitle: {
+    color: '#E8E8F0',
+    fontSize: 28,
+    fontWeight: '700',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  doneSub: {
+    color: '#6B6B8A',
+    fontSize: 15,
+    textAlign: 'center',
+    lineHeight: 22,
+    marginBottom: 32,
+  },
+  restartBtn: {
+    backgroundColor: '#7C6FFF',
+    paddingHorizontal: 32,
+    paddingVertical: 14,
+    borderRadius: 12,
+  },
+  restartText: {
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontWeight: '700',
+    letterSpacing: 0.5,
+  },
+
+  // Loading
+  loadingScreen: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 16,
+  },
+  loadingText: {
+    color: '#6B6B8A',
+    fontSize: 14,
+  },
+
+  // Dev badge
+  devBadge: {
+    position: 'absolute',
+    bottom: 72,
+    right: 12,
+    backgroundColor: '#1E1E2E',
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderWidth: 1,
+    borderColor: '#2E2E4E',
+  },
+  devBadgeText: {
+    color: '#4A4A6A',
+    fontSize: 9,
+    fontFamily: 'System',
+    letterSpacing: 1,
+  },
+});
