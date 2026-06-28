@@ -20,28 +20,29 @@ jobs:
         with:
           node-version: '22'
 
-      # ── Install cmake via apt (faster + correct version) ─────────────────────
-      - name: Install CMake 3.28
-        run: |
-          sudo apt-get update -y
-          sudo apt-get install -y cmake
-          cmake --version
-
-      # ── Tell Gradle to use system cmake ──────────────────────────────────────
-      - name: Set cmake.dir in local.properties
-        run: |
-          echo "cmake.dir=$(dirname $(which cmake))/.." >> android/local.properties
-          cat android/local.properties
-
-      # ── Accept all Android SDK licenses ──────────────────────────────────────
-      - name: Accept Android licenses
-        run: |
-          yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --licenses || true
-
       # ── Install NDK ───────────────────────────────────────────────────────────
       - name: Install NDK
         run: |
           echo "y" | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager "ndk;27.1.12297006"
+
+      # ── THE REAL FIX: Replace SDK cmake 3.22.1 with cmake 3.31 ───────────────
+      - name: Replace SDK cmake with newer version
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y cmake ninja-build
+          CMAKE_PATH=$(which cmake)
+          NINJA_PATH=$(which ninja)
+          echo "System cmake: $CMAKE_PATH ($(cmake --version | head -1))"
+          SDK_CMAKE_DIR="$ANDROID_SDK_ROOT/cmake/3.22.1/bin"
+          echo "Replacing: $SDK_CMAKE_DIR/cmake"
+          sudo cp "$CMAKE_PATH" "$SDK_CMAKE_DIR/cmake"
+          sudo cp "$NINJA_PATH" "$SDK_CMAKE_DIR/ninja"
+          "$SDK_CMAKE_DIR/cmake" --version
+
+      # ── Accept Android SDK licenses ───────────────────────────────────────────
+      - name: Accept Android licenses
+        run: |
+          yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --licenses || true
 
       - name: Clean and install dependencies
         run: |
