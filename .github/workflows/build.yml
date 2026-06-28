@@ -20,18 +20,28 @@ jobs:
         with:
           node-version: '22'
 
-      # ── Fix: Install correct CMake version for Reanimated 3.x + Skia ────────
-      - name: Setup Android SDK cmake
+      # ── Install cmake via apt (faster + correct version) ─────────────────────
+      - name: Install CMake 3.28
         run: |
-          echo "y" | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager "cmake;3.28.0"
-          echo "ANDROID_CMAKE=$ANDROID_SDK_ROOT/cmake/3.28.0/bin" >> $GITHUB_ENV
+          sudo apt-get update -y
+          sudo apt-get install -y cmake
+          cmake --version
 
-      # ── Fix: Install NDK explicitly ───────────────────────────────────────────
-      - name: Setup Android NDK
+      # ── Tell Gradle to use system cmake ──────────────────────────────────────
+      - name: Set cmake.dir in local.properties
+        run: |
+          echo "cmake.dir=$(dirname $(which cmake))/.." >> android/local.properties
+          cat android/local.properties
+
+      # ── Accept all Android SDK licenses ──────────────────────────────────────
+      - name: Accept Android licenses
+        run: |
+          yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --licenses || true
+
+      # ── Install NDK ───────────────────────────────────────────────────────────
+      - name: Install NDK
         run: |
           echo "y" | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager "ndk;27.1.12297006"
-          echo "ANDROID_NDK_HOME=$ANDROID_SDK_ROOT/ndk/27.1.12297006" >> $GITHUB_ENV
-          echo "ANDROID_NDK=$ANDROID_SDK_ROOT/ndk/27.1.12297006" >> $GITHUB_ENV
 
       - name: Clean and install dependencies
         run: |
