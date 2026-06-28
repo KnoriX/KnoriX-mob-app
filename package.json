@@ -13,8 +13,16 @@
     "react": "19.2.3",
     "react-native": "0.86.0",
     "@react-native/new-app-screen": "0.86.0",
-    "react-native-safe-area-context": "^5.5.2"
-  },
+    "react-native-safe-area-context": "^5.5.2",
+    "react-native-reanimated": "^3.16.7",
+    "react-native-svg": "^15.11.2",
+    "react-native-webview": "^13.13.5",
+    "react-native-video": "^6.10.2",
+    "@shopify/react-native-skia": "^1.7.4",
+    "react-native-markdown-display": "^7.0.2",
+    "react-native-track-player": "^4.1.1",
+    "react-native-gesture-handler": "^2.21.2"
+  }
   "devDependencies": {
     "@babel/core": "^7.25.2",
     "@babel/preset-env": "^7.25.3",
