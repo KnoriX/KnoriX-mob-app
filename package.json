@@ -22,7 +22,7 @@
     "react-native-markdown-display": "^7.0.2",
     "react-native-track-player": "^4.1.1",
     "react-native-gesture-handler": "^2.21.2"
-  }
+  },
   "devDependencies": {
     "@babel/core": "^7.25.2",
     "@babel/preset-env": "^7.25.3",
