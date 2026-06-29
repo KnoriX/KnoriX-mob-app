@@ -1,5 +1,5 @@
 import { Skia, BlendMode, TileMode } from '@shopify/react-native-skia';
-import type { PaintConfig, BlendModeType, GradientStop } from './skiaNode.types';
+import type { PaintConfig, BlendModeType, GradientStop } from './SkiaNode.types';
 
 // ─── Blend mode map ───────────────────────────────────────────────────────────
 
