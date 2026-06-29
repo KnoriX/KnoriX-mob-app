@@ -19,10 +19,14 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+          cache: 'npm'
+
+      - name: Accept Android licenses
+        run: |
+          yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --licenses || true
 
       - name: Install Android SDK packages
         run: |
-          yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --licenses || true
           $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager \
             "platform-tools" \
             "platforms;android-34" \
@@ -33,11 +37,12 @@ jobs:
       - name: Set Android env
         run: |
           echo "ANDROID_NDK=$ANDROID_SDK_ROOT/ndk/27.1.12297006" >> $GITHUB_ENV
-          echo "CMAKE_VERSION=3.22.1" >> $GITHUB_ENV
 
       - name: Clean and install dependencies
         run: |
-          npm ci
+          npm cache clean --force
+          rm -rf node_modules package-lock.json
+          npm install --legacy-peer-deps
 
       - name: Make gradlew executable
         run: chmod +x android/gradlew
@@ -53,4 +58,14 @@ jobs:
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
           cd android
-          ./gradlew assembleRelease --stacktrace --info
+          ./gradlew assembleRelease --stacktrace --info \
+            -Pandroid.injected.signing.store.file=$GITHUB_WORKSPACE/android/app/knorix-release.keystore \
+            -Pandroid.injected.signing.store.password=$KEYSTORE_PASSWORD \
+            -Pandroid.injected.signing.key.alias=$KEY_ALIAS \
+            -Pandroid.injected.signing.key.password=$KEY_PASSWORD
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: KnoriX-release
+          path: android/app/build/outputs/apk/release/
