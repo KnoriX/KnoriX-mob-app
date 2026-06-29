@@ -20,7 +20,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 // ─── Node components ──────────────────────────────────────────────────────────
 import MarkdownNode  from './modules/markdown/MarkdownNode';
-import MCQNode       from './modules/mcq/MCQNode';
+import MCQNode       from './modules/MCQ/MCQNode';
 import SVGNode       from './modules/svg/SvgNode';
 import KaTeXNode     from './modules/KaTex/KaTexNode';
 import MermaidNode   from './modules/Mermaid/MermaidNode';
