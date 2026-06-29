@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import type { ParticleConfig } from './skiaNode.types';
+import type { ParticleConfig } from './SkiaNode.types';
 
 export interface Particle {
   id: number;
