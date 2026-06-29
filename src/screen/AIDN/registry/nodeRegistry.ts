@@ -13,17 +13,15 @@ import type { AIDNNode } from '../types/node.types';
 // ─── Lazy imports (code-split per module) ────────────────────
 // RN Metro bundler splits each into its own chunk → faster TTI
 
-const MarkdownNode  = React.lazy(() => import('../modules/markdown/markdownNode'));
-const MCQNode       = React.lazy(() => import('../modules/MCQ/mcqNode'));
-const SkiaNode      = React.lazy(() => import('../modules/Skia/skiaNode'));
-const KaTeXNode     = React.lazy(() => import('../modules/KaTex/formulaNode'));
+const MarkdownNode  = React.lazy(() => import('../modules/markdown/MarkdownNode'));
+const MCQNode       = React.lazy(() => import('../modules/MCQ/MCQNode'));
+const SkiaNode      = React.lazy(() => import('../modules/Skia/SkiaNode'));
+const KaTeXNode     = React.lazy(() => import('../modules/KaTex/KatexNode'));
 const AudioNode     = React.lazy(() => import('../modules/AudioNode'));
 const RealtimeNode  = React.lazy(() => import('../modules/websocket/RealtimeNode'));
-
-// Uncomment as you build:
-// const VideoNode   = React.lazy(() => import('../modules/video/videoNode'));
-// const SVGNode     = React.lazy(() => import('../modules/svg/svgNode'));
-// const MermaidNode = React.lazy(() => import('../modules/Mermaid/mermaidNode'));
+const VideoNode   = React.lazy(() => import('../modules/video/VideoNode'));
+const SVGNode     = React.lazy(() => import('../modules/svg/SvgNode'));
+const MermaidNode = React.lazy(() => import('../modules/Mermaid/MermaidNode'));
 
 // ─── Component type ──────────────────────────────────────────
 
