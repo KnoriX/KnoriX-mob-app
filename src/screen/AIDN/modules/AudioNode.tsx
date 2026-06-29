@@ -25,7 +25,7 @@ import Animated, {
   FadeIn,
   FadeOut,
 } from 'react-native-reanimated';
-import { Colors, Typography, Spacing, Radius } from '../styles/tokens';
+import { Colors, Typography, Spacing, Radius } from '../styles/token';
 import { useAudioSync } from '../hooks/useAudioSync';
 import type { AudioPayload, CanvasEventDispatcher } from '../types/audio.types';
 
