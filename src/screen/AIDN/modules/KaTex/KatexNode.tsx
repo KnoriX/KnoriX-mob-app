@@ -11,7 +11,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { WebView } from 'react-native-webview';
 
-import { Colors, Typography, Spacing, Radius } from '../../styles/tokens';
+import { Colors, Typography, Spacing, Radius } from '../../styles/token';
 import { buildKaTexHtml } from './katexHtmlBuilder';
 import type { KaTexPayload, KaTexDisplayMode } from './katexNode.types';
 import type { NodeProps } from '../../types/node.types';
