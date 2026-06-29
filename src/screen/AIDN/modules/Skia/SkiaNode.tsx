@@ -16,14 +16,14 @@ import {
   interpolatePath, useDerivedValue,
 } from '@shopify/react-native-skia';
 
-import { Colors, Typography, Spacing, Radius } from '../../styles/tokens';
+import { Colors, Typography, Spacing, Radius } from '../../styles/token';
 import {
   buildPaint, buildGlowPaint, buildArrowPath, resolveEasing, hexToSkia,
-} from './skiaPaintBuilder';
+} from './SkiaPaintBuilder';
 import { useParticleSystem } from './useParticleSystem';
 import type {
   SkiaPayload, DrawCommand, AnimationPreset,
-} from './skiaNode.types';
+} from './SkiaNode.types';
 import type { NodeProps } from '../../types/node.types';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
