@@ -26,6 +26,39 @@ jobs:
           rm -rf node_modules
           npm install --legacy-peer-deps
 
+      - name: Patch Reanimated compatibility for RN 0.86
+        run: |
+          node -e "
+          const fs = require('fs');
+          const path = 'node_modules/react-native-reanimated/compatibility.json';
+          const data = JSON.parse(fs.readFileSync(path, 'utf8'));
+          Object.keys(data).forEach(key => {
+            if (Array.isArray(data[key]['react-native'])) {
+              if (!data[key]['react-native'].includes('0.86')) {
+                data[key]['react-native'].push('0.86');
+              }
+            }
+          });
+          fs.writeFileSync(path, JSON.stringify(data, null, 2));
+          console.log('Patched Reanimated compatibility.json for RN 0.86');
+          "
+          node -e "
+          const fs = require('fs');
+          const path = 'node_modules/react-native-worklets/compatibility.json';
+          if (fs.existsSync(path)) {
+            const data = JSON.parse(fs.readFileSync(path, 'utf8'));
+            Object.keys(data).forEach(key => {
+              if (Array.isArray(data[key]['react-native'])) {
+                if (!data[key]['react-native'].includes('0.86')) {
+                  data[key]['react-native'].push('0.86');
+                }
+              }
+            });
+            fs.writeFileSync(path, JSON.stringify(data, null, 2));
+            console.log('Patched Worklets compatibility.json for RN 0.86');
+          }
+          "
+
       - name: Make gradlew executable
         run: chmod +x android/gradlew
 
