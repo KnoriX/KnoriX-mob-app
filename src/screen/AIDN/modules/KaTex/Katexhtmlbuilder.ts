@@ -1,4 +1,4 @@
-import type { FormulaItem, KaTexDisplayMode } from './katexNode.types';
+import type { FormulaItem, KaTexDisplayMode } from './Katexnode.types';
 
 // ─── KaTeX Dark Theme CSS ─────────────────────────────────────────────────────
 
