@@ -19,29 +19,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: 'npm'
 
-      - name: Accept Android licenses
-        run: |
-          yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --licenses || true
-
-      - name: Install Android SDK packages
-        run: |
-          $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager \
-            "platform-tools" \
-            "platforms;android-34" \
-            "build-tools;34.0.0" \
-            "cmake;3.22.1" \
-            "ndk;27.1.12297006"
-
-      - name: Set Android env
-        run: |
-          echo "ANDROID_NDK=$ANDROID_SDK_ROOT/ndk/27.1.12297006" >> $GITHUB_ENV
-
-      - name: Clean and install dependencies
+      - name: Install dependencies
         run: |
           npm cache clean --force
-          rm -rf node_modules package-lock.json
+          rm -rf node_modules
           npm install --legacy-peer-deps
 
       - name: Make gradlew executable
@@ -58,7 +40,7 @@ jobs:
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
           cd android
-          ./gradlew assembleRelease --stacktrace --info \
+          ./gradlew assembleRelease \
             -Pandroid.injected.signing.store.file=$GITHUB_WORKSPACE/android/app/knorix-release.keystore \
             -Pandroid.injected.signing.store.password=$KEYSTORE_PASSWORD \
             -Pandroid.injected.signing.key.alias=$KEY_ALIAS \
