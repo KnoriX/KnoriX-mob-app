@@ -17,7 +17,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { WebView } from 'react-native-webview';
 import { SvgXml } from 'react-native-svg';
-import { Colors, Typography, Spacing, Radius } from '../../styles/tokens';
+import { Colors, Typography, Spacing, Radius } from '../../styles/token';
 import type { NodeProps } from '../../types/node.types';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
