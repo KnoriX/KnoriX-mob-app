@@ -22,7 +22,7 @@ import { SvgXml } from 'react-native-svg';
 import { AIDNNode, SvgPayload, SvgHighlight, SvgTapZone } from '../../types/node.types';
 import { wsService } from '../../services/websocketService';
 import { svgStyles as S, CARD_WIDTH, CARD_HEIGHT } from './svgNode.styles';
-import { Colors } from '../../styles/tokens';
+import { Colors } from '../../styles/token';
 
 // ─── Constants ────────────────────────────────────────────────────────────
 
