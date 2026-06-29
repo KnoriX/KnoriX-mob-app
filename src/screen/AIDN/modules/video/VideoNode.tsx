@@ -33,7 +33,7 @@ import Video, {
 
 import { AIDNNode, VideoPayload } from '../../types/node.types';
 import { wsService } from '../../services/websocketService';
-import { videoStyles as S, CARD_WIDTH, CARD_HEIGHT, VIDEO_HEIGHT } from './videoNode.styles';
+import { videoStyles as S, CARD_WIDTH, CARD_HEIGHT, VIDEO_HEIGHT } from './VideoNode.styles';
 import { Colors } from '../../styles/token';
 
 // ─── Constants ────────────────────────────────────────────────────────────
