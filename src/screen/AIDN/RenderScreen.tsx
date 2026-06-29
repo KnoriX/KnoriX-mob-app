@@ -19,16 +19,16 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 // ─── Node components ──────────────────────────────────────────────────────────
-import MarkdownNode  from '../../modules/markdown/MarkdownNode';
-import MCQNode       from '../../modules/mcq/MCQNode';
-import SVGNode       from '../../modules/svg/SvgNode';
-import KaTeXNode     from '../../modules/KaTex/KaTexNode';
-import MermaidNode   from '../../modules/Mermaid/MermaidNode';
-import SkiaNode      from '../../modules/Skia/SkiaNode';
-import VideoNode     from '../../modules/video/VideoNode';
+import MarkdownNode  from './modules/markdown/MarkdownNode';
+import MCQNode       from './modules/mcq/MCQNode';
+import SVGNode       from './modules/svg/SvgNode';
+import KaTeXNode     from './modules/KaTex/KaTexNode';
+import MermaidNode   from './modules/Mermaid/MermaidNode';
+import SkiaNode      from './modules/Skia/SkiaNode';
+import VideoNode     from './modules/video/VideoNode';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-import type { AIDNNode } from '../../types/node.types';
+import type { AIDNNode } from './types/node.types';
 
 // ─── Demo lesson JSON (replace with API call later) ───────────────────────────
 const DEMO_LESSON: AIDNNode[] = [
