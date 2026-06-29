@@ -24,7 +24,7 @@ import {
   Group,
   Paint,
 } from '@shopify/react-native-skia';
-import { Colors, Typography, Spacing, Radius } from '../../../styles/tokens';
+import { Colors, Typography, Spacing, Radius } from '../../../styles/token';
 import type { WhiteboardCommand, WhiteboardConfig } from '../../../types/realtime.types';
 
 const { width: SW } = Dimensions.get('window');
