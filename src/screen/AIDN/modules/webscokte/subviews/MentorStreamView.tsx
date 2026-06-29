@@ -23,7 +23,7 @@ import Animated, {
   withTiming,
   FadeIn,
 } from 'react-native-reanimated';
-import { Colors, Typography, Spacing, Radius } from '../../../styles/tokens';
+import { Colors, Typography, Spacing, Radius } from '../../../styles/token';
 import type { MentorStreamConfig } from '../../../types/realtime.types';
 
 const { width: SW } = Dimensions.get('window');
