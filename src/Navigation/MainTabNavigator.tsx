@@ -10,7 +10,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { View, Text, StyleSheet } from 'react-native';
 
 // ─── Screens ─────────────────────────────────────────────────────────────────
-import RenderScreen from '../screens/AIDN/RenderScreen';
+import RenderScreen from '../screen/AIDN/RenderScreen';
 
 // ─── Placeholder screens (build these later) ─────────────────────────────────
 function HomeScreen() {
