@@ -22,8 +22,8 @@ import Animated, {
 
 import { AIDNNode, MCQPayload } from '../../types/node.types';
 import { wsService } from '../../services/websocketService';
-import { mcqStyles as S, OptionState } from './mcqNode.styles';
-import { Colors } from '../../styles/tokens';
+import { mcqStyles as S, OptionState } from './McqNode.styles';
+import { Colors } from '../../styles/token';
 
 // ─── Constants ────────────────────────────────────────────────────────────
 
