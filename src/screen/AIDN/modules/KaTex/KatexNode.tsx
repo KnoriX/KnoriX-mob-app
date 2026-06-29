@@ -12,8 +12,8 @@ import Animated, {
 import { WebView } from 'react-native-webview';
 
 import { Colors, Typography, Spacing, Radius } from '../../styles/token';
-import { buildKaTexHtml } from './katexHtmlBuilder';
-import type { KaTexPayload, KaTexDisplayMode } from './katexNode.types';
+import { buildKaTexHtml } from './Katexhtmlbuilder';
+import type { KaTexPayload, KaTexDisplayMode } from './Katexnode.types';
 import type { NodeProps } from '../../types/node.types';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
