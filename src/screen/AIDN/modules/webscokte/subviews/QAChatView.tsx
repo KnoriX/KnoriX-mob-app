@@ -18,7 +18,7 @@ import {
   Platform,
 } from 'react-native';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
-import { Colors, Typography, Spacing, Radius } from '../../../styles/tokens';
+import { Colors, Typography, Spacing, Radius } from '../../../styles/token';
 import type { QAMessage, QAChatConfig } from '../../../types/realtime.types';
 
 const { width: SW } = Dimensions.get('window');
