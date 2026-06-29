@@ -19,13 +19,13 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 // ─── Node components ──────────────────────────────────────────────────────────
-import MarkdownNode  from '../../modules/nodes/markdown/MarkdownNode';
-import MCQNode       from '../../modules/nodes/mcq/MCQNode';
-import SVGNode       from '../../modules/nodes/svg/SvgNode';
-import KaTeXNode     from '../../modules/nodes/katex/KaTexNode';
-import MermaidNode   from '../../modules/nodes/mermaid/MermaidNode';
-import SkiaNode      from '../../modules/nodes/skia/SkiaNode';
-import VideoNode     from '../../modules/nodes/video/VideoNode';
+import MarkdownNode  from '../../modules/markdown/MarkdownNode';
+import MCQNode       from '../../modules/mcq/MCQNode';
+import SVGNode       from '../../modules/svg/SvgNode';
+import KaTeXNode     from '../../modules/KaTex/KaTexNode';
+import MermaidNode   from '../../modules/Mermaid/MermaidNode';
+import SkiaNode      from '../../modules/Skia/SkiaNode';
+import VideoNode     from '../../modules/video/VideoNode';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 import type { AIDNNode } from '../../types/node.types';
