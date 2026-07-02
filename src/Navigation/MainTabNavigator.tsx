@@ -1,13 +1,12 @@
-
 /**
  * KnoriX — Main Tab Navigator
  * src/Navigation/MainTabNavigator.tsx
  */
-
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { NavigationContainer } from '@react-navigation/native';
 import { View, Text, StyleSheet } from 'react-native';
+import { Home, Zap, User } from 'lucide-react-native';
 
 // ─── Screens ─────────────────────────────────────────────────────────────────
 import RenderScreen from '../screen/AIDN/RenderScreen';
@@ -50,18 +49,23 @@ const placeholderStyles = StyleSheet.create({
   },
 });
 
-// ─── Tab icon ─────────────────────────────────────────────────────────────────
+// ─── Tab icon (Lucide, not emoji) ─────────────────────────────────────────────
+const TAB_ICONS: Record<string, React.ComponentType<any>> = {
+  Home: Home,
+  Learn: Zap,
+  Profile: User,
+};
+
 function TabIcon({ label, focused }: { label: string; focused: boolean }) {
-  const icons: Record<string, string> = {
-    Home:   '🏠',
-    Learn:  '⚡',
-    Profile:'👤',
-  };
+  const Icon = TAB_ICONS[label] ?? Home;
+
   return (
-    <View style={{ alignItems: 'center' }}>
-      <Text style={{ fontSize: 20, opacity: focused ? 1 : 0.45 }}>
-        {icons[label] ?? '●'}
-      </Text>
+    <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+      <Icon
+        size={22}
+        color={focused ? '#7C6FFF' : '#4A4A6A'}
+        strokeWidth={focused ? 2.4 : 2}
+      />
     </View>
   );
 }
