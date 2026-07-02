@@ -94,7 +94,7 @@ export default function RenderScreen() {
     const unsubMsg = wsService.onMessage((msg) => {
       switch (msg.event) {
         case SOCKET_EVENTS.NODE_PUSH:
-          if (validatePayload(msg.payload?.node_type, msg.payload?.payload)) {
+          if (validatePayload(msg.payload?.type, msg.payload?.payload)) {
             addNode(msg.payload as Record<string, unknown>);
           } else {
             console.warn('[RenderScreen] Dropped invalid node_push payload');
@@ -203,8 +203,8 @@ export default function RenderScreen() {
   }
 
   // ─── Main Canvas ────────────────────────────────────────────────────────
-  const NodeComponent = resolveNode(currentNode.node_type);
-  const payloadIsValid = validatePayload(currentNode.node_type, currentNode.payload);
+  const NodeComponent = resolveNode(currentNode.type);
+  const payloadIsValid = validatePayload(currentNode.type, currentNode.payload);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -249,7 +249,7 @@ export default function RenderScreen() {
 
       <View style={styles.devBadge}>
         <Text style={styles.devBadgeText}>
-          {currentNode.node_type.toUpperCase()}
+          {currentNode.type.toUpperCase()}
         </Text>
       </View>
     </SafeAreaView>
