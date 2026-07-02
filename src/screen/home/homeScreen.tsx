@@ -42,6 +42,10 @@ const C = {
   warn: '#D97706',
 };
 
+const today = new Date();
+
+const [selectedDate, setSelectedDate] = useState(today.getDate());
+
 // ─── Mock data (replace with API later) ────────────────────────────────────
 const WEEK_DAYS = [
   { label: 'Sun', date: 28 },
@@ -206,8 +210,9 @@ export default function HomeScreen() {
 
   const dateTitle = useMemo(() => {
     const day = WEEK_DAYS.find(d => d.date === selectedDate);
-    return day ? `${day.label}, ${day.date} June` : '';
-  }, [selectedDate]);
+    const month = today.toLocaleString('default', { month: 'long' });
+    return day ? `${day.label}, ${day.date} ${month}` : '';
+    }, [selectedDate]);
 
   return (
     <SafeAreaView style={s.container} edges={['top']}>
@@ -297,7 +302,7 @@ const s = StyleSheet.create({
 
   // Profile card
   profileCard: {
-    backgroundColor: C.accent,
+    backgroundColor: C.bg,
     paddingHorizontal: 20,
     paddingTop: 20,
     paddingBottom: 24,
