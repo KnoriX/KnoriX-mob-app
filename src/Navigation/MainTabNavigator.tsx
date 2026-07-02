@@ -10,17 +10,9 @@ import { Home, Zap, User } from 'lucide-react-native';
 
 // ─── Screens ─────────────────────────────────────────────────────────────────
 import RenderScreen from '../screen/AIDN/RenderScreen';
+import HomeScreen from '../screen/home/homeScreen';  
 
 // ─── Placeholder screens (build these later) ─────────────────────────────────
-function HomeScreen() {
-  return (
-    <View style={placeholderStyles.container}>
-      <Text style={placeholderStyles.text}>🏠 Home</Text>
-      <Text style={placeholderStyles.sub}>Student Dashboard — Coming Soon</Text>
-    </View>
-  );
-}
-
 function ProfileScreen() {
   return (
     <View style={placeholderStyles.container}>
@@ -29,6 +21,7 @@ function ProfileScreen() {
     </View>
   );
 }
+
 
 const placeholderStyles = StyleSheet.create({
   container: {
