@@ -42,10 +42,6 @@ const C = {
   warn: '#D97706',
 };
 
-const today = new Date();
-
-const [selectedDate, setSelectedDate] = useState(today.getDate());
-
 // ─── Mock data (replace with API later) ────────────────────────────────────
 const WEEK_DAYS = [
   { label: 'Sun', date: 28 },
@@ -206,8 +202,9 @@ function ScheduleItem({ item }: { item: (typeof TODAY_SCHEDULE)[number] }) {
 // ─── HomeScreen ─────────────────────────────────────────────────────────────
 
 export default function HomeScreen() {
-  const [selectedDate, setSelectedDate] = useState(29);
-
+  const today = new Date();
+  const [selectedDate, setSelectedDate] = useState(today.getDate());
+  
   const dateTitle = useMemo(() => {
     const day = WEEK_DAYS.find(d => d.date === selectedDate);
     const month = today.toLocaleString('default', { month: 'long' });
