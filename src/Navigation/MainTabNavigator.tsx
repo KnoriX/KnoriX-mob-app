@@ -105,6 +105,12 @@ export default function MainTabNavigator() {
         <Tab.Screen
           name="Learn"
           component={RenderScreen}
+          initialParams={{
+            lessonId: 'test-lesson-1',
+            studentId: 'test-student-1',
+            authToken: 'dummy-token',
+            wsUrl: '',
+          }}
           options={{
             tabBarIcon: ({ focused }) => <TabIcon label="Learn" focused={focused} />,
           }}
