@@ -43,15 +43,6 @@ const C = {
 };
 
 // ─── Mock data (replace with API later) ────────────────────────────────────
-const WEEK_DAYS = [
-  { label: 'Sun', date: 28 },
-  { label: 'Mon', date: 29 },
-  { label: 'Tue', date: 30 },
-  { label: 'Wed', date: 1 },
-  { label: 'Thu', date: 2 },
-  { label: 'Fri', date: 3 },
-  { label: 'Sat', date: 4 },
-];
 
 const TODAY_SCHEDULE = [
   {
@@ -203,13 +194,36 @@ function ScheduleItem({ item }: { item: (typeof TODAY_SCHEDULE)[number] }) {
 
 export default function HomeScreen() {
   const today = new Date();
+
   const [selectedDate, setSelectedDate] = useState(today.getDate());
-  
+
+  const WEEK_DAYS = useMemo(() => {
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+    const start = new Date(today);
+    start.setDate(today.getDate() - today.getDay()); // Sunday
+
+    return Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(start);
+      d.setDate(start.getDate() + i);
+
+      return {
+        label: days[d.getDay()],
+        date: d.getDate(),
+      };
+    });
+  }, []);
+
   const dateTitle = useMemo(() => {
     const day = WEEK_DAYS.find(d => d.date === selectedDate);
-    const month = today.toLocaleString('default', { month: 'long' });
-    return day ? `${day.label}, ${day.date} ${month}` : '';
-    }, [selectedDate]);
+
+    return day
+      ? `${day.label}, ${day.date} ${today.toLocaleString('default', {
+          month: 'long',
+          year: 'numeric',
+        })}`
+      : '';
+  }, [selectedDate, WEEK_DAYS]);
 
   return (
     <SafeAreaView style={s.container} edges={['top']}>
