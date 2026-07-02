@@ -8,7 +8,7 @@ export const MOCK_LESSON_PLAN = {
   nodes: [
     {
       id: 'n1',
-      node_type: 'markdown',
+      type: 'markdown',
       order: 1,
       meta: { title: 'Python Inheritance' },
       payload: {
@@ -18,7 +18,7 @@ export const MOCK_LESSON_PLAN = {
     },
     {
       id: 'n2',
-      node_type: 'mcq',
+      type: 'mcq',
       order: 2,
       meta: { title: 'Quick Check' },
       payload: {
@@ -39,7 +39,7 @@ export const MOCK_LESSON_PLAN = {
     },
     {
       id: 'n3',
-      node_type: 'katex',
+      type: 'katex',
       order: 3,
       meta: { title: 'Formula' },
       payload: {
@@ -50,7 +50,7 @@ export const MOCK_LESSON_PLAN = {
     },
     {
       id: 'n4',
-      node_type: 'skia',
+      type: 'skia',
       order: 4,
       meta: { title: 'Diagram Test' },
       payload: {
