@@ -2,8 +2,13 @@
  * KnoriX — Home Screen
  * src/screen/Home/HomeScreen.tsx
  *
- * Student dashboard: profile summary, mastery stats,
- * weekly view, and today's lesson schedule.
+ * Student dashboard for Class XII learners: profile summary,
+ * mastery stats, weekly view, and today's lesson schedule.
+ *
+ * Design direction: "dark academia" — antique gold on ink,
+ * serif display type for identity, sans-serif for data/labels.
+ * Signature element: SVG progress ring around the avatar,
+ * reading overall board-exam readiness at a glance.
  */
 
 import React, { useState, useMemo } from 'react';
@@ -15,92 +20,167 @@ import {
   ScrollView,
   TouchableOpacity,
   Dimensions,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Svg, { Circle } from 'react-native-svg';
 import {
   Settings,
-  Trophy,
-  ClipboardList,
-  Zap,
+  BookOpen,
+  ClipboardCheck,
+  Flame,
   Clock,
-  User as UserIcon,
+  ChevronRight,
 } from 'lucide-react-native';
 
 const { width: SW } = Dimensions.get('window');
 
-// ─── Theme (matches RenderScreen dark palette) ─────────────────────────────
+// ─── Theme — "dark academia": ink + antique gold ───────────────────────────
 const C = {
-  bg: '#0A0A0F',
-  surface: '#12121A',
-  card: '#1E1E2E',
-  border: '#2E2E4E',
-  accent: '#7C6FFF',
-  accentSoft: '#7C6FFF22',
-  textPrimary: '#E8E8F0',
-  textMuted: '#6B6B8A',
-  success: '#059669',
-  warn: '#D97706',
+  bg: '#0C0B0A',
+  surface: '#161310',
+  card: '#1D1913',
+  cardAlt: '#221D16',
+  hairline: '#332C21',
+  gold: '#C9A227',
+  goldSoft: '#C9A22720',
+  goldDim: '#8A7024',
+  cream: '#F3EEE3',
+  textPrimary: '#F3EEE3',
+  textMuted: '#8C8272',
+  textFaint: '#5C564A',
+  danger: '#C1666B',
+  dangerSoft: '#C1666B1E',
+  sage: '#8FA98C',
 };
 
-// ─── Mock data (replace with API later) ────────────────────────────────────
+const serif = Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' });
+
+// ─── Mock data — Class XII, Science stream ─────────────────────────────────
+
+const STUDENT = {
+  name: 'Jaanvi Kumari',
+  grade: 'Class XII',
+  stream: 'Science',
+  readiness: 0.76, // board-exam readiness, drives the progress ring
+};
+
+const QUICK_STATS = [
+  { key: 'subjects', icon: BookOpen, label: 'Subjects', value: '6' },
+  { key: 'assignments', icon: ClipboardCheck, label: 'Assignments due', value: '3' },
+  { key: 'streak', icon: Flame, label: 'Day streak', value: '18' },
+];
+
+const STAT_BAR = [
+  { label: 'Class rank', value: '#4' },
+  { label: 'Avg. score', value: '84%' },
+  { label: 'Board prep', value: '76%' },
+];
 
 const TODAY_SCHEDULE = [
   {
     id: 's1',
     time: '07:00 - 07:45',
-    title: 'Mine Ventilation Basics',
-    instructor: 'DGMS Module 3',
-    badge: { type: 'duration', label: '35 min' },
+    title: 'Optics & Wave Theory',
+    subtitle: 'Physics · Ch. 9',
+    badge: { type: 'duration', label: '45 min' },
   },
   {
     id: 's2',
     time: '08:15 - 09:00',
-    title: 'Safety Regulations',
-    instructor: 'CMR 2017 · Ch. 4',
-    badge: { type: 'hw', label: 'HW' },
-  },
-  {
-    id: 's3',
-    time: '09:15 - 10:00',
-    title: 'Explosives Handling',
-    instructor: 'MMR 1961',
-    badge: null,
-  },
-  {
-    id: 's4',
-    time: '10:15 - 11:00',
-    title: 'Mock Test: Gas Testing',
-    instructor: 'Practice Set 12',
+    title: 'Electrochemistry',
+    subtitle: 'Chemistry · NCERT Ch. 3',
     badge: { type: 'hw', label: 'HW' },
   },
   {
     id: 'break',
-    time: '12:00 - 13:00',
+    time: '09:00 - 09:20',
     title: 'Break',
-    instructor: 'Take a breather ☕',
+    subtitle: 'Stretch, hydrate, reset ☕',
     isBreak: true,
   },
+  {
+    id: 's3',
+    time: '09:20 - 10:05',
+    title: 'Definite Integrals',
+    subtitle: 'Mathematics · Sample Paper 4',
+    badge: { type: 'hw', label: 'HW' },
+  },
+  {
+    id: 's4',
+    time: '10:20 - 11:00',
+    title: 'Flamingo — Poetry Section',
+    subtitle: 'English Core · Ch. 2',
+    badge: null,
+  },
+  {
+    id: 's5',
+    time: '11:10 - 11:55',
+    title: 'Functions in Python',
+    subtitle: 'Computer Science · Lab Test',
+    badge: { type: 'duration', label: '45 min' },
+  },
 ];
+
+// ─── Progress ring avatar (signature element) ──────────────────────────────
+function AvatarRing({ progress, size = 64 }: { progress: number; size?: number }) {
+  const stroke = 2.5;
+  const r = (size - stroke) / 2;
+  const cx = size / 2;
+  const cy = size / 2;
+  const circumference = 2 * Math.PI * r;
+  const dash = circumference * progress;
+
+  return (
+    <View style={{ width: size, height: size }}>
+      <Svg width={size} height={size} style={StyleSheet.absoluteFill}>
+        <Circle cx={cx} cy={cy} r={r} stroke={C.hairline} strokeWidth={stroke} fill="none" />
+        <Circle
+          cx={cx}
+          cy={cy}
+          r={r}
+          stroke={C.gold}
+          strokeWidth={stroke}
+          strokeDasharray={`${dash}, ${circumference}`}
+          strokeLinecap="round"
+          fill="none"
+          rotation="-90"
+          origin={`${cx}, ${cy}`}
+        />
+      </Svg>
+      <Image
+        source={{ uri: 'https://i.pravatar.cc/150?img=12' }}
+        style={{
+          width: size - stroke * 4,
+          height: size - stroke * 4,
+          borderRadius: (size - stroke * 4) / 2,
+          margin: stroke * 2,
+        }}
+      />
+    </View>
+  );
+}
 
 // ─── Quick stat pill ────────────────────────────────────────────────────────
 function QuickStat({
   icon: Icon,
   label,
-  bg,
+  value,
 }: {
   icon: React.ComponentType<any>;
   label: string;
-  bg: string;
+  value: string;
 }) {
   return (
-    <TouchableOpacity style={s.quickStat} activeOpacity={0.8}>
-      <View style={[s.quickStatIcon, { backgroundColor: bg }]}>
-        <Icon size={16} color="#fff" />
+    <View style={s.quickStat}>
+      <View style={s.quickStatIcon}>
+        <Icon size={14} color={C.gold} strokeWidth={2} />
       </View>
-      <Text style={s.quickStatLabel} numberOfLines={2}>
+      <Text style={s.quickStatValue}>{value}</Text>
+      <Text style={s.quickStatLabel} numberOfLines={1}>
         {label}
       </Text>
-    </TouchableOpacity>
+    </View>
   );
 }
 
@@ -118,15 +198,13 @@ function DayChip({
 }) {
   return (
     <View style={s.dayChipWrap}>
-      <Text style={s.dayChipLabel}>{label}</Text>
+      <Text style={[s.dayChipLabel, active && { color: C.gold }]}>{label}</Text>
       <TouchableOpacity
         style={[s.dayChip, active && s.dayChipActive]}
         onPress={onPress}
         activeOpacity={0.8}
       >
-        <Text style={[s.dayChipDate, active && s.dayChipDateActive]}>
-          {date}
-        </Text>
+        <Text style={[s.dayChipDate, active && s.dayChipDateActive]}>{date}</Text>
       </TouchableOpacity>
     </View>
   );
@@ -137,12 +215,12 @@ function ScheduleItem({ item }: { item: (typeof TODAY_SCHEDULE)[number] }) {
   if (item.isBreak) {
     return (
       <View style={s.breakCard}>
-        <Clock size={18} color="#fff" />
-        <View style={{ marginLeft: 12 }}>
-          <Text style={s.breakTime}>{item.time}</Text>
+        <Clock size={16} color={C.textMuted} />
+        <View style={{ marginLeft: 12, flex: 1 }}>
           <Text style={s.breakTitle}>{item.title}</Text>
-          <Text style={s.breakSub}>{item.instructor}</Text>
+          <Text style={s.breakSub}>{item.subtitle}</Text>
         </View>
+        <Text style={s.breakTime}>{item.time}</Text>
       </View>
     );
   }
@@ -159,32 +237,19 @@ function ScheduleItem({ item }: { item: (typeof TODAY_SCHEDULE)[number] }) {
         <Text style={s.scheduleTitle} numberOfLines={1}>
           {item.title}
         </Text>
-        <View style={s.scheduleInstructorRow}>
-          <View style={s.scheduleAvatar}>
-            <UserIcon size={11} color={C.textMuted} />
-          </View>
-          <Text style={s.scheduleInstructor} numberOfLines={1}>
-            {item.instructor}
-          </Text>
-        </View>
+        <Text style={s.scheduleSubtitle} numberOfLines={1}>
+          {item.subtitle}
+        </Text>
       </View>
 
-      {item.badge && (
-        <View
-          style={[
-            s.badge,
-            item.badge.type === 'hw' ? s.badgeHW : s.badgeDuration,
-          ]}
-        >
-          <Text
-            style={[
-              s.badgeText,
-              item.badge.type === 'hw' ? s.badgeTextHW : s.badgeTextDuration,
-            ]}
-          >
+      {item.badge ? (
+        <View style={[s.badge, item.badge.type === 'hw' ? s.badgeHW : s.badgeDuration]}>
+          <Text style={[s.badgeText, item.badge.type === 'hw' ? s.badgeTextHW : s.badgeTextDuration]}>
             {item.badge.label}
           </Text>
         </View>
+      ) : (
+        <ChevronRight size={16} color={C.textFaint} />
       )}
     </TouchableOpacity>
   );
@@ -194,29 +259,22 @@ function ScheduleItem({ item }: { item: (typeof TODAY_SCHEDULE)[number] }) {
 
 export default function HomeScreen() {
   const today = new Date();
-
   const [selectedDate, setSelectedDate] = useState(today.getDate());
 
   const WEEK_DAYS = useMemo(() => {
     const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-
     const start = new Date(today);
-    start.setDate(today.getDate() - today.getDay()); // Sunday
+    start.setDate(today.getDate() - today.getDay());
 
     return Array.from({ length: 7 }, (_, i) => {
       const d = new Date(start);
       d.setDate(start.getDate() + i);
-
-      return {
-        label: days[d.getDay()],
-        date: d.getDate(),
-      };
+      return { label: days[d.getDay()], date: d.getDate() };
     });
   }, []);
 
   const dateTitle = useMemo(() => {
     const day = WEEK_DAYS.find(d => d.date === selectedDate);
-
     return day
       ? `${day.label}, ${day.date} ${today.toLocaleString('default', {
           month: 'long',
@@ -227,51 +285,51 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={s.container} edges={['top']}>
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={s.scrollContent}
-      >
-        {/* ─── Profile Card ───────────────────────────────────────── */}
-        <View style={s.profileCard}>
-          <View style={s.profileTopRow}>
-            <Image
-              source={{ uri: 'https://i.pravatar.cc/150?img=12' }}
-              style={s.avatar}
-            />
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={s.scrollContent}>
+        {/* ─── Header ─────────────────────────────────────────────── */}
+        <View style={s.header}>
+          <View style={s.headerTopRow}>
+            <AvatarRing progress={STUDENT.readiness} />
+
             <View style={{ flex: 1, marginLeft: 14 }}>
-              <Text style={s.name}>Jaanvi Kumari</Text>
-              <View style={s.roleBadge}>
-                <Text style={s.roleBadgeText}>DGMS Aspirant</Text>
+              <Text style={s.eyebrow}>WELCOME BACK</Text>
+              <Text style={s.name}>{STUDENT.name}</Text>
+              <View style={s.gradeRow}>
+                <View style={s.gradeBadge}>
+                  <Text style={s.gradeBadgeText}>{STUDENT.grade}</Text>
+                </View>
+                <Text style={s.streamText}>{STUDENT.stream}</Text>
               </View>
             </View>
-            <TouchableOpacity style={s.settingsBtn}>
-              <Settings size={18} color={C.textPrimary} />
+
+            <TouchableOpacity style={s.settingsBtn} activeOpacity={0.8}>
+              <Settings size={17} color={C.textMuted} />
             </TouchableOpacity>
           </View>
 
+          <View style={s.hairlineRule} />
+
           <View style={s.quickStatsRow}>
-            <QuickStat icon={Trophy} label="Academic Success" bg="#3B82F6" />
-            <QuickStat icon={ClipboardList} label="Homework" bg="#F97316" />
-            <QuickStat icon={Zap} label="Streak: 12d" bg="#F59E0B" />
+            {QUICK_STATS.map((q, i) => (
+              <React.Fragment key={q.key}>
+                <QuickStat icon={q.icon} label={q.label} value={q.value} />
+                {i < QUICK_STATS.length - 1 && <View style={s.quickStatDivider} />}
+              </React.Fragment>
+            ))}
           </View>
         </View>
 
         {/* ─── Stats bar ───────────────────────────────────────────── */}
         <View style={s.statsBar}>
-          <View style={s.statItem}>
-            <Text style={s.statValue}>Rank 3</Text>
-            <Text style={s.statLabel}>Mock Test</Text>
-          </View>
-          <View style={s.statDivider} />
-          <View style={s.statItem}>
-            <Text style={s.statValue}>78%</Text>
-            <Text style={s.statLabel}>Avg. Mastery</Text>
-          </View>
-          <View style={s.statDivider} />
-          <View style={s.statItem}>
-            <Text style={s.statValue}>1,240</Text>
-            <Text style={s.statLabel}>XP Points</Text>
-          </View>
+          {STAT_BAR.map((stat, i) => (
+            <React.Fragment key={stat.label}>
+              <View style={s.statItem}>
+                <Text style={s.statValue}>{stat.value}</Text>
+                <Text style={s.statLabel}>{stat.label}</Text>
+              </View>
+              {i < STAT_BAR.length - 1 && <View style={s.statDivider} />}
+            </React.Fragment>
+          ))}
         </View>
 
         {/* ─── Week selector ───────────────────────────────────────── */}
@@ -311,69 +369,100 @@ const s = StyleSheet.create({
   container: { flex: 1, backgroundColor: C.bg },
   scrollContent: { paddingBottom: 40 },
 
-  // Profile card
-  profileCard: {
-    backgroundColor: C.bg,
+  // Header
+  header: {
+    backgroundColor: C.surface,
     paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 24,
-    borderBottomLeftRadius: 28,
-    borderBottomRightRadius: 28,
+    paddingTop: 18,
+    paddingBottom: 18,
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
   },
-  profileTopRow: {
+  headerTopRow: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  avatar: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    borderWidth: 2,
-    borderColor: '#ffffff55',
+  eyebrow: {
+    color: C.goldDim,
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 1.4,
   },
-  name: { color: '#fff', fontSize: 19, fontWeight: '700' },
-  roleBadge: {
-    alignSelf: 'flex-start',
-    backgroundColor: '#ffffff30',
-    paddingHorizontal: 10,
+  name: {
+    color: C.cream,
+    fontSize: 21,
+    fontFamily: serif,
+    fontWeight: '700',
+    marginTop: 3,
+  },
+  gradeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 7,
+    gap: 8,
+  },
+  gradeBadge: {
+    backgroundColor: C.goldSoft,
+    paddingHorizontal: 9,
     paddingVertical: 3,
-    borderRadius: 12,
-    marginTop: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: `${C.gold}40`,
   },
-  roleBadgeText: { color: '#fff', fontSize: 11, fontWeight: '600' },
+  gradeBadgeText: {
+    color: C.gold,
+    fontSize: 10.5,
+    fontWeight: '700',
+    letterSpacing: 0.3,
+  },
+  streamText: {
+    color: C.textMuted,
+    fontSize: 12.5,
+  },
   settingsBtn: {
     width: 34,
     height: 34,
-    borderRadius: 17,
-    backgroundColor: '#ffffff25',
+    borderRadius: 12,
+    backgroundColor: C.card,
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: C.hairline,
+  },
+
+  hairlineRule: {
+    height: 1,
+    backgroundColor: C.hairline,
+    marginTop: 18,
+    marginBottom: 14,
   },
 
   quickStatsRow: {
     flexDirection: 'row',
-    gap: 10,
-    marginTop: 18,
+    alignItems: 'center',
   },
   quickStat: {
     flex: 1,
-    backgroundColor: '#fff',
-    borderRadius: 14,
-    padding: 10,
-    gap: 6,
+    alignItems: 'flex-start',
+    gap: 3,
+  },
+  quickStatDivider: {
+    width: 1,
+    height: 30,
+    backgroundColor: C.hairline,
+    marginHorizontal: 6,
   },
   quickStatIcon: {
-    width: 28,
-    height: 28,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
+    marginBottom: 2,
+  },
+  quickStatValue: {
+    color: C.cream,
+    fontSize: 15,
+    fontWeight: '700',
   },
   quickStatLabel: {
-    color: '#1A1A2E',
-    fontSize: 11,
-    fontWeight: '700',
-    lineHeight: 14,
+    color: C.textFaint,
+    fontSize: 10.5,
   },
 
   // Stats bar
@@ -381,43 +470,44 @@ const s = StyleSheet.create({
     flexDirection: 'row',
     backgroundColor: C.card,
     marginHorizontal: 16,
-    marginTop: -18,
+    marginTop: 14,
     borderRadius: 16,
-    paddingVertical: 16,
+    paddingVertical: 15,
     borderWidth: 1,
-    borderColor: C.border,
+    borderColor: C.hairline,
   },
   statItem: { flex: 1, alignItems: 'center' },
-  statDivider: { width: 1, backgroundColor: C.border },
-  statValue: { color: C.textPrimary, fontSize: 16, fontWeight: '700' },
-  statLabel: { color: C.textMuted, fontSize: 11, marginTop: 4 },
+  statDivider: { width: 1, backgroundColor: C.hairline },
+  statValue: { color: C.gold, fontSize: 16, fontFamily: serif, fontWeight: '700' },
+  statLabel: { color: C.textMuted, fontSize: 10.5, marginTop: 4 },
 
   // Week selector
   weekRow: {
     paddingHorizontal: 16,
-    paddingTop: 20,
+    paddingTop: 22,
     gap: 10,
   },
   dayChipWrap: { alignItems: 'center', gap: 8 },
-  dayChipLabel: { color: C.textMuted, fontSize: 11, fontWeight: '600' },
+  dayChipLabel: { color: C.textFaint, fontSize: 11, fontWeight: '600' },
   dayChip: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
+    width: 38,
+    height: 38,
+    borderRadius: 11,
     backgroundColor: C.card,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: C.border,
+    borderColor: C.hairline,
   },
-  dayChipActive: { backgroundColor: C.accent, borderColor: C.accent },
-  dayChipDate: { color: C.textPrimary, fontSize: 15, fontWeight: '700' },
-  dayChipDateActive: { color: '#fff' },
+  dayChipActive: { backgroundColor: C.gold, borderColor: C.gold },
+  dayChipDate: { color: C.textPrimary, fontSize: 14.5, fontWeight: '700' },
+  dayChipDateActive: { color: C.bg },
 
   // Date title
   dateTitle: {
-    color: C.textPrimary,
-    fontSize: 20,
+    color: C.cream,
+    fontSize: 18,
+    fontFamily: serif,
     fontWeight: '700',
     marginTop: 22,
     marginHorizontal: 16,
@@ -427,65 +517,54 @@ const s = StyleSheet.create({
   scheduleList: {
     marginTop: 14,
     paddingHorizontal: 16,
-    gap: 12,
+    gap: 10,
   },
   scheduleCard: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: C.card,
-    borderRadius: 16,
+    borderRadius: 14,
     padding: 14,
     borderWidth: 1,
-    borderColor: C.border,
+    borderColor: C.hairline,
   },
-  scheduleTimeCol: { width: 56, alignItems: 'flex-start' },
-  scheduleTime: { color: C.textPrimary, fontSize: 12, fontWeight: '700' },
+  scheduleTimeCol: { width: 54, alignItems: 'flex-start' },
+  scheduleTime: { color: C.textPrimary, fontSize: 11.5, fontWeight: '700' },
   scheduleTimeDivider: {
     width: 1,
-    height: 14,
-    backgroundColor: C.border,
+    height: 12,
+    backgroundColor: C.hairline,
     marginVertical: 3,
-    marginLeft: 4,
+    marginLeft: 3,
   },
-  scheduleTimeMuted: { color: C.textMuted, fontSize: 11 },
+  scheduleTimeMuted: { color: C.textFaint, fontSize: 10.5 },
   scheduleBody: { flex: 1, marginLeft: 10 },
-  scheduleTitle: { color: C.textPrimary, fontSize: 14.5, fontWeight: '700' },
-  scheduleInstructorRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 5,
-    gap: 6,
-  },
-  scheduleAvatar: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    backgroundColor: C.surface,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  scheduleInstructor: { color: C.textMuted, fontSize: 12, flexShrink: 1 },
+  scheduleTitle: { color: C.textPrimary, fontSize: 14, fontWeight: '700' },
+  scheduleSubtitle: { color: C.textMuted, fontSize: 11.5, marginTop: 4 },
 
   badge: {
-    paddingHorizontal: 10,
+    paddingHorizontal: 9,
     paddingVertical: 5,
-    borderRadius: 10,
+    borderRadius: 8,
   },
-  badgeHW: { backgroundColor: '#EF444422' },
-  badgeDuration: { backgroundColor: C.accentSoft },
-  badgeText: { fontSize: 11, fontWeight: '700' },
-  badgeTextHW: { color: '#EF4444' },
-  badgeTextDuration: { color: C.accent },
+  badgeHW: { backgroundColor: C.dangerSoft },
+  badgeDuration: { backgroundColor: C.goldSoft },
+  badgeText: { fontSize: 10.5, fontWeight: '700' },
+  badgeTextHW: { color: C.danger },
+  badgeTextDuration: { color: C.gold },
 
   // Break card
   breakCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: C.accent,
-    borderRadius: 16,
-    padding: 16,
+    backgroundColor: C.cardAlt,
+    borderRadius: 14,
+    padding: 14,
+    borderStyle: 'dashed',
+    borderWidth: 1,
+    borderColor: C.hairline,
   },
-  breakTime: { color: '#fff', fontSize: 12, fontWeight: '700', opacity: 0.85 },
-  breakTitle: { color: '#fff', fontSize: 15, fontWeight: '700', marginTop: 2 },
-  breakSub: { color: '#ffffffcc', fontSize: 12, marginTop: 2 },
+  breakTitle: { color: C.textPrimary, fontSize: 13.5, fontWeight: '700' },
+  breakSub: { color: C.textMuted, fontSize: 11.5, marginTop: 2 },
+  breakTime: { color: C.textFaint, fontSize: 10.5 },
 });
