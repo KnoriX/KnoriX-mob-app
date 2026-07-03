@@ -5,8 +5,7 @@
  * Student dashboard for Class XII learners: profile summary,
  * mastery stats, weekly view, and today's lesson schedule.
  *
- * Design direction: "dark academia" — antique gold on ink,
- * serif display type for identity, sans-serif for data/labels.
+ * Original color system preserved (ink bg + violet accent).
  * Signature element: SVG progress ring around the avatar,
  * reading overall board-exam readiness at a glance.
  */
@@ -20,7 +19,6 @@ import {
   ScrollView,
   TouchableOpacity,
   Dimensions,
-  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Circle } from 'react-native-svg';
@@ -35,31 +33,29 @@ import {
 
 const { width: SW } = Dimensions.get('window');
 
-// ─── Theme — "dark academia": ink + antique gold ───────────────────────────
+// ─── Theme (original palette, unchanged) ───────────────────────────────────
 const C = {
-  bg: '#0C0B0A',
-  surface: '#161310',
-  card: '#1D1913',
-  cardAlt: '#221D16',
-  hairline: '#332C21',
-  gold: '#C9A227',
-  goldSoft: '#C9A22720',
-  goldDim: '#8A7024',
-  cream: '#F3EEE3',
-  textPrimary: '#F3EEE3',
-  textMuted: '#8C8272',
-  textFaint: '#5C564A',
-  danger: '#C1666B',
-  dangerSoft: '#C1666B1E',
-  sage: '#8FA98C',
+  bg: '#0A0A0F',
+  surface: '#12121A',
+  card: '#1E1E2E',
+  cardAlt: '#191926',
+  border: '#2E2E4E',
+  accent: '#7C6FFF',
+  accentSoft: '#7C6FFF22',
+  accentDim: '#9C90FF',
+  textPrimary: '#E8E8F0',
+  textMuted: '#6B6B8A',
+  textFaint: '#4B4B66',
+  success: '#059669',
+  warn: '#D97706',
+  danger: '#EF4444',
+  dangerSoft: '#EF444422',
 };
-
-const serif = Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' });
 
 // ─── Mock data — Class XII, Science stream ─────────────────────────────────
 
 const STUDENT = {
-  name: 'Jaanvi Kumari',
+  name: 'Kvinit Karmkar',
   grade: 'Class XII',
   stream: 'Science',
   readiness: 0.76, // board-exam readiness, drives the progress ring
@@ -134,12 +130,12 @@ function AvatarRing({ progress, size = 64 }: { progress: number; size?: number }
   return (
     <View style={{ width: size, height: size }}>
       <Svg width={size} height={size} style={StyleSheet.absoluteFill}>
-        <Circle cx={cx} cy={cy} r={r} stroke={C.hairline} strokeWidth={stroke} fill="none" />
+        <Circle cx={cx} cy={cy} r={r} stroke={C.border} strokeWidth={stroke} fill="none" />
         <Circle
           cx={cx}
           cy={cy}
           r={r}
-          stroke={C.gold}
+          stroke={C.accent}
           strokeWidth={stroke}
           strokeDasharray={`${dash}, ${circumference}`}
           strokeLinecap="round"
@@ -174,7 +170,7 @@ function QuickStat({
   return (
     <View style={s.quickStat}>
       <View style={s.quickStatIcon}>
-        <Icon size={14} color={C.gold} strokeWidth={2} />
+        <Icon size={14} color={C.accent} strokeWidth={2} />
       </View>
       <Text style={s.quickStatValue}>{value}</Text>
       <Text style={s.quickStatLabel} numberOfLines={1}>
@@ -198,7 +194,7 @@ function DayChip({
 }) {
   return (
     <View style={s.dayChipWrap}>
-      <Text style={[s.dayChipLabel, active && { color: C.gold }]}>{label}</Text>
+      <Text style={[s.dayChipLabel, active && { color: C.accent }]}>{label}</Text>
       <TouchableOpacity
         style={[s.dayChip, active && s.dayChipActive]}
         onPress={onPress}
@@ -383,16 +379,15 @@ const s = StyleSheet.create({
     alignItems: 'center',
   },
   eyebrow: {
-    color: C.goldDim,
+    color: C.accentDim,
     fontSize: 10,
     fontWeight: '700',
     letterSpacing: 1.4,
   },
   name: {
-    color: C.cream,
+    color: C.textPrimary,
     fontSize: 21,
-    fontFamily: serif,
-    fontWeight: '700',
+    fontWeight: '800',
     marginTop: 3,
   },
   gradeRow: {
@@ -402,15 +397,15 @@ const s = StyleSheet.create({
     gap: 8,
   },
   gradeBadge: {
-    backgroundColor: C.goldSoft,
+    backgroundColor: C.accentSoft,
     paddingHorizontal: 9,
     paddingVertical: 3,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: `${C.gold}40`,
+    borderColor: `${C.accent}40`,
   },
   gradeBadgeText: {
-    color: C.gold,
+    color: C.accent,
     fontSize: 10.5,
     fontWeight: '700',
     letterSpacing: 0.3,
@@ -427,12 +422,12 @@ const s = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: C.hairline,
+    borderColor: C.border,
   },
 
   hairlineRule: {
     height: 1,
-    backgroundColor: C.hairline,
+    backgroundColor: C.border,
     marginTop: 18,
     marginBottom: 14,
   },
@@ -449,14 +444,14 @@ const s = StyleSheet.create({
   quickStatDivider: {
     width: 1,
     height: 30,
-    backgroundColor: C.hairline,
+    backgroundColor: C.border,
     marginHorizontal: 6,
   },
   quickStatIcon: {
     marginBottom: 2,
   },
   quickStatValue: {
-    color: C.cream,
+    color: C.textPrimary,
     fontSize: 15,
     fontWeight: '700',
   },
@@ -474,11 +469,11 @@ const s = StyleSheet.create({
     borderRadius: 16,
     paddingVertical: 15,
     borderWidth: 1,
-    borderColor: C.hairline,
+    borderColor: C.border,
   },
   statItem: { flex: 1, alignItems: 'center' },
-  statDivider: { width: 1, backgroundColor: C.hairline },
-  statValue: { color: C.gold, fontSize: 16, fontFamily: serif, fontWeight: '700' },
+  statDivider: { width: 1, backgroundColor: C.border },
+  statValue: { color: C.accent, fontSize: 16, fontWeight: '800' },
   statLabel: { color: C.textMuted, fontSize: 10.5, marginTop: 4 },
 
   // Week selector
@@ -497,18 +492,17 @@ const s = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: C.hairline,
+    borderColor: C.border,
   },
-  dayChipActive: { backgroundColor: C.gold, borderColor: C.gold },
+  dayChipActive: { backgroundColor: C.accent, borderColor: C.accent },
   dayChipDate: { color: C.textPrimary, fontSize: 14.5, fontWeight: '700' },
-  dayChipDateActive: { color: C.bg },
+  dayChipDateActive: { color: '#fff' },
 
   // Date title
   dateTitle: {
-    color: C.cream,
+    color: C.textPrimary,
     fontSize: 18,
-    fontFamily: serif,
-    fontWeight: '700',
+    fontWeight: '800',
     marginTop: 22,
     marginHorizontal: 16,
   },
@@ -526,14 +520,14 @@ const s = StyleSheet.create({
     borderRadius: 14,
     padding: 14,
     borderWidth: 1,
-    borderColor: C.hairline,
+    borderColor: C.border,
   },
   scheduleTimeCol: { width: 54, alignItems: 'flex-start' },
   scheduleTime: { color: C.textPrimary, fontSize: 11.5, fontWeight: '700' },
   scheduleTimeDivider: {
     width: 1,
     height: 12,
-    backgroundColor: C.hairline,
+    backgroundColor: C.border,
     marginVertical: 3,
     marginLeft: 3,
   },
@@ -548,10 +542,10 @@ const s = StyleSheet.create({
     borderRadius: 8,
   },
   badgeHW: { backgroundColor: C.dangerSoft },
-  badgeDuration: { backgroundColor: C.goldSoft },
+  badgeDuration: { backgroundColor: C.accentSoft },
   badgeText: { fontSize: 10.5, fontWeight: '700' },
   badgeTextHW: { color: C.danger },
-  badgeTextDuration: { color: C.gold },
+  badgeTextDuration: { color: C.accent },
 
   // Break card
   breakCard: {
@@ -562,7 +556,7 @@ const s = StyleSheet.create({
     padding: 14,
     borderStyle: 'dashed',
     borderWidth: 1,
-    borderColor: C.hairline,
+    borderColor: C.border,
   },
   breakTitle: { color: C.textPrimary, fontSize: 13.5, fontWeight: '700' },
   breakSub: { color: C.textMuted, fontSize: 11.5, marginTop: 2 },
