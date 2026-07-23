@@ -5,7 +5,7 @@
 // Dark premium 16:9 card — same design language as all nodes
 // ─────────────────────────────────────────────────────────────
 
-import React, { useRef, useCallback, useMemo } from 'react';
+import React, { useRef, useMemo } from 'react';
 import {
   View,
   Text,
