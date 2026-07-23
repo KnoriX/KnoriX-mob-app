@@ -13,15 +13,15 @@ import type { AIDNNode } from '../types/node.types';
 // ─── Lazy imports (code-split per module) ────────────────────
 // RN Metro bundler splits each into its own chunk → faster TTI
 
-const MarkdownNode  = React.lazy(() => import('../modules/markdown/MarkdownNode'));
-const MCQNode       = React.lazy(() => import('../modules/MCQ/MCQNode'));
-const SkiaNode      = React.lazy(() => import('../modules/Skia/SkiaNode'));
-const KaTeXNode     = React.lazy(() => import('../modules/KaTex/KatexNode'));
-const AudioNode     = React.lazy(() => import('../modules/AudioNode'));
-const RealtimeNode  = React.lazy(() => import('../modules/websocket/RealtimeNode'));
-const VideoNode   = React.lazy(() => import('../modules/video/VideoNode'));
-const SVGNode     = React.lazy(() => import('../modules/svg/SvgNode'));
-const MermaidNode = React.lazy(() => import('../modules/Mermaid/MermaidNode'));
+const MarkdownNode = React.lazy(() => import('../modules/markdown/MarkdownNode'));
+const MCQNode      = React.lazy(() => import('../modules/MCQ/MCQNode'));
+const SkiaNode     = React.lazy(() => import('../modules/Skia/SkiaNode'));
+const KaTeXNode    = React.lazy(() => import('../modules/KaTex/KatexNode'));
+const AudioNode    = React.lazy(() => import('../modules/AudioNode'));
+const RealtimeNode = React.lazy(() => import('../modules/websocket/RealtimeNode'));
+const VideoNode    = React.lazy(() => import('../modules/video/VideoNode'));
+const SVGNode      = React.lazy(() => import('../modules/svg/SvgNode'));
+const MermaidNode  = React.lazy(() => import('../modules/Mermaid/MermaidNode'));
 
 // ─── Component type ──────────────────────────────────────────
 
@@ -81,22 +81,20 @@ const validators: Record<NodeType, (payload: unknown) => boolean> = {
 // ─── Registry map ─────────────────────────────────────────────
 
 const NODE_REGISTRY: Partial<Record<NodeType, NodeComponent>> = {
-  [NODE_TYPES.MARKDOWN]:  MarkdownNode  as unknown as NodeComponent,
-  [NODE_TYPES.MCQ]:       MCQNode       as unknown as NodeComponent,
-  [NODE_TYPES.SKIA]:      SkiaNode      as unknown as NodeComponent,
-  [NODE_TYPES.KATEX]:     KaTeXNode     as unknown as NodeComponent,
-  [NODE_TYPES.AUDIO]:     AudioNode     as unknown as NodeComponent,
-  [NODE_TYPES.REALTIME]:  RealtimeNode  as unknown as NodeComponent,
-
-  // Uncomment as you build:
-  // [NODE_TYPES.VIDEO]:   VideoNode   as unknown as NodeComponent,
-  // [NODE_TYPES.SVG]:     SVGNode     as unknown as NodeComponent,
-  // [NODE_TYPES.MERMAID]: MermaidNode as unknown as NodeComponent,
+  [NODE_TYPES.MARKDOWN]: MarkdownNode as unknown as NodeComponent,
+  [NODE_TYPES.MCQ]:      MCQNode      as unknown as NodeComponent,
+  [NODE_TYPES.SKIA]:     SkiaNode     as unknown as NodeComponent,
+  [NODE_TYPES.KATEX]:    KaTeXNode    as unknown as NodeComponent,
+  [NODE_TYPES.AUDIO]:    AudioNode    as unknown as NodeComponent,
+  [NODE_TYPES.REALTIME]: RealtimeNode as unknown as NodeComponent,
+  [NODE_TYPES.VIDEO]:    VideoNode    as unknown as NodeComponent,
+  [NODE_TYPES.SVG]:      SVGNode      as unknown as NodeComponent,
+  [NODE_TYPES.MERMAID]:  MermaidNode  as unknown as NodeComponent,
 };
 
 // ─── Fallback component ───────────────────────────────────────
 
-export const UnknownNodeFallback: NodeComponent = ({ node }) => null;
+export const UnknownNodeFallback: NodeComponent = ({ node: _node }) => null;
 // Canvas shows its own error UI — this just prevents crash
 
 // ─── Public API ───────────────────────────────────────────────
