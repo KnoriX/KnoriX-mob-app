@@ -3,26 +3,26 @@
  * Dark premium theme — built for long study sessions.
  * Every module derives colors, spacing & type from here.
  */
-
 export const Colors = {
   // Canvas
   canvas:       '#0F0F13',   // deepest background
+  background:   '#0F0F13',   // alias for canvas (used by some modules)
   surface:      '#16161D',   // card/node surface
   surfaceRaised:'#1C1C26',   // elevated elements (code blocks, blockquotes)
+  surfaceElevated: '#22222E', // higher elevation (modals, popovers)
   border:       '#2A2A3A',   // subtle separator
   borderAccent: '#3D3D5C',   // focused/hover border
-
   // Accent — indigo-violet, premium, not generic green
   accent:       '#7C6FFF',   // primary accent
   accentSoft:   '#7C6FFF22', // tinted backgrounds
   accentGlow:   '#7C6FFF44', // glow shadow
-
+  accentMuted:  '#7C6FFF88', // muted/dimmed accent (icons, secondary highlights)
   // Text hierarchy
   textPrimary:  '#E8E8F0',   // headings
   textBody:     '#B8B8CC',   // body copy
+  textSecondary:'#9494AC',   // secondary text (subtitles, less prominent labels)
   textMuted:    '#6B6B88',   // captions, metadata
   textCode:     '#A8D8B9',   // inline code — soft mint, readable on dark
-
   // Syntax highlight palette (for code blocks)
   syntaxKeyword:'#C792EA',   // purple
   syntaxString: '#C3E88D',   // green
@@ -30,13 +30,11 @@ export const Colors = {
   syntaxComment:'#546E7A',   // grey-blue
   syntaxFunc:   '#82AAFF',   // blue
   syntaxType:   '#FFCB6B',   // yellow
-
   // Semantic
   success:      '#4ADE80',
   warning:      '#FACC15',
   error:        '#FF6B6B',
   info:         '#60A5FA',
-
   // Table
   tableHeader:  '#1E1E2E',
   tableRowAlt:  '#19191F',
@@ -58,6 +56,8 @@ export const Radius = {
   lg:  16,
   xl:  22,
   pill:999,
+  card: 16,   // node/card container corners
+  btn:  12,   // button corners
 } as const;
 
 export const Typography = {
@@ -70,7 +70,9 @@ export const Typography = {
   h6: { fontSize: 13, lineHeight: 20, fontWeight: '600' as const },
   body: { fontSize: 15, lineHeight: 24, fontWeight: '400' as const },
   bodySmall: { fontSize: 13, lineHeight: 20, fontWeight: '400' as const },
+  semibold: { fontSize: 15, lineHeight: 22, fontWeight: '600' as const },
   code: { fontSize: 13, lineHeight: 20, fontFamily: 'monospace' as const },
+  mono: { fontSize: 12, lineHeight: 18, fontFamily: 'monospace' as const, fontWeight: '400' as const },
   caption: { fontSize: 11, lineHeight: 16, fontWeight: '500' as const, letterSpacing: 0.4 },
 } as const;
 
