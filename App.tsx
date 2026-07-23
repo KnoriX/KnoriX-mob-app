@@ -1,10 +1,5 @@
-/**
- * KnoriX — Adaptive Intelligence Delivery Network
- * Root Application Entry Point
- */
-
 import React from 'react';
-import { StatusBar, StyleSheet, View } from 'react-native';
+import { StatusBar, StyleSheet } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import MainTabNavigator from './src/Navigation/MainTabNavigator';
