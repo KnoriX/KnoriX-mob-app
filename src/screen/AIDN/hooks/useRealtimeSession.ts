@@ -60,7 +60,6 @@ export function useRealtimeSession(
   onDone: () => void,
 ) {
   const [state, setState] = useState<RealtimeState>(initialState(payload.mode));
-  const streamBufferRef = useRef('');
   const pausedRef = useRef(false);
   const pendingTokensRef = useRef<string[]>([]);
   const flushTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
