@@ -1,0 +1,42 @@
+name: God Build (Release APK)
+on:
+  workflow_dispatch:
+    inputs:
+      version_note:
+        description: "Release note (optional)"
+        required: false
+        default: ""
+
+jobs:
+  # ─────────────────────────────────────────────────────────────
+  # Quality gate — runs first. If this fails, the build job never
+  # starts, so no signing/Gradle time is wasted on broken code.
+  # ─────────────────────────────────────────────────────────────
+  quality-check:
+    name: Lint, Typecheck & Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main branch
+        uses: actions/checkout@v5
+        with:
+          ref: main
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install Dependencies
+        run: npm install --legacy-peer-deps
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npx tsc --noEmit
+
+      - name: Run tests
+        run: npm test -- --ci
+
+ 
