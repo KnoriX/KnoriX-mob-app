@@ -1,17 +1,8 @@
-// ─────────────────────────────────────────────────────────────
-// hooks/useAudioSync.ts  (React Native CLI version)
-// Uses: react-native-track-player
-// Install: npm install react-native-track-player
-//          cd ios && pod install
-// ─────────────────────────────────────────────────────────────
-
 import { useState, useEffect, useRef, useCallback } from 'react';
 import TrackPlayer, {
-  Event,
   State,
   usePlaybackState,
   useProgress,
-  useTrackPlayerEvents,
   Capability,
   AppKilledPlaybackBehavior,
 } from 'react-native-track-player';
