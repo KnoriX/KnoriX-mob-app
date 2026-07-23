@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import {
   View,
@@ -51,7 +50,7 @@ export interface MermaidPayload {
 function injectHighlights(svg: string, highlights: MermaidHighlight[]): string {
   if (!highlights?.length) return svg;
   let result = svg;
-  highlights.forEach(({ nodeId, color, pulse }) => {
+  highlights.forEach(({ nodeId, color: _color, pulse: _pulse }) => {
     // Mermaid SVG uses id patterns like "flowchart-A-0", "A", etc.
     // We do a broad regex replace on fill for matching node groups
     const safeId = nodeId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
