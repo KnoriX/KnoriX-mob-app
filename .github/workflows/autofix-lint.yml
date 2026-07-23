@@ -1,0 +1,36 @@
+name: Auto-fix Lint Issues (one-time)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  autofix:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: main
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - run: npm install --legacy-peer-deps
+
+      - name: Run ESLint auto-fix
+        run: npx eslint . --fix
+        continue-on-error: true
+        # continue-on-error: true because --fix can't resolve everything
+        # (like missing hook dependencies) — it fixes what it safely can
+        # (unused imports/vars, formatting) and leaves the rest for manual review.
+
+      - name: Commit auto-fixed changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --staged --quiet || git commit -m "chore: eslint --fix auto-cleanup (unused imports/vars)"
+          git push
