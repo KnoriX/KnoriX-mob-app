@@ -63,7 +63,7 @@ function WaveformVisualizer({ isPlaying }: { isPlaying: boolean }) {
   );
 }
 
-function AnimatedBar({ baseHeight, isPlaying, delay }: { baseHeight: number; isPlaying: boolean; delay: number }) {
+function AnimatedBar({ baseHeight, isPlaying, delay: _delay }: { baseHeight: number; isPlaying: boolean; delay: number }) {
   const scale = useSharedValue(1);
 
   React.useEffect(() => {
@@ -193,7 +193,7 @@ interface Props {
 }
 
 export default function AudioNode({ payload, onDone, dispatcher }: Props) {
-  const { state, play, pause, seek, skip, setVolume } = useAudioSync(payload, dispatcher, onDone);
+  const { state, play, pause, seek, skip } = useAudioSync(payload, dispatcher, onDone);
 
   const fadeOpacity = useSharedValue(0);
   const fadeY = useSharedValue(10);
