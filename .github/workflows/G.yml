@@ -1,4 +1,4 @@
-name: God Build (Release APK)
+name: Lent Types
 on:
   workflow_dispatch:
     inputs:
