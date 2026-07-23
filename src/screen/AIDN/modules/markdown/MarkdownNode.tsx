@@ -17,7 +17,7 @@ import Animated, {
 import Markdown from 'react-native-markdown-display';
 
 import { AIDNNode, MarkdownPayload } from '../../types/node.types';
-import { styles, markdownStyles, CARD_WIDTH, CARD_HEIGHT } from './markdownNode.styles';
+import { styles, markdownStyles } from './markdownNode.styles';
 import { Colors } from './Token';
 
 // ─── Props ────────────────────────────────────────────────────────────────
