@@ -9,32 +9,25 @@ import {
   Text,
   TouchableOpacity,
   TouchableWithoutFeedback,
-  Dimensions,
-  StatusBar,
   Modal,
 } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withTiming,
-  withSequence,
   runOnJS,
   Easing,
-  FadeIn,
-  FadeOut,
 } from 'react-native-reanimated';
 import Video, {
   OnProgressData,
   OnLoadData,
-  OnSeekData,
   SelectedTrack,
   SelectedTrackType,
 } from 'react-native-video';
 
 import { AIDNNode, VideoPayload } from '../../types/node.types';
 import { wsService } from '../../services/websocketService';
-import { videoStyles as S, CARD_WIDTH, CARD_HEIGHT, VIDEO_HEIGHT } from './VideoNode.styles';
-import { Colors } from '../../styles/token';
+import { videoStyles as S } from './VideoNode.styles';
 
 // ─── Constants ────────────────────────────────────────────────────────────
 
@@ -197,7 +190,7 @@ export default function VideoNode({ node, onDone }: VideoNodeProps) {
   const [currentTime, setCurrentTime] = useState(startAt);
   const [duration, setDuration]       = useState(0);
   const [speed, setSpeed]             = useState(playbackRate);
-  const [showControls, setShowControls] = useState(controlMode !== 'none');
+  const [, setShowControls] = useState(controlMode !== 'none');
   const [showChapters, setShowChapters] = useState(false);
   const [ended, setEnded]             = useState(false);
   const [selectedSubtitle, setSelectedSubtitle] = useState<string | null>(
