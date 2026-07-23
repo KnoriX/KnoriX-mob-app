@@ -109,6 +109,27 @@ const AnimatedCommand: React.FC<AnimCmdProps> = ({ cmd, scaleX, scaleY, preset }
   const paint     = useMemo(() => buildPaint(cmd.paint ?? {}, scaleX, scaleY), []);
   const glowPaint = useMemo(() => buildGlowPaint(cmd.paint ?? {}, scaleX, scaleY), []);
 
+  // ── Morph path setup — computed unconditionally at top level so the
+  //    useDerivedValue hook below always runs, regardless of cmd.type.
+  //    (Hooks can't live inside renderShape() since it's a plain helper
+  //    function, not a component or custom hook — moving the derived
+  //    value here keeps the hook call unconditional and satisfies
+  //    react-hooks/rules-of-hooks.)
+  const morphFromTo = useMemo(() => {
+    if (cmd.type !== 'morph_path' || !cmd.fromD || !cmd.toD) return null;
+    const from = Skia.Path.MakeFromSVGString(cmd.fromD);
+    const to   = Skia.Path.MakeFromSVGString(cmd.toD);
+    if (!from || !to) return null;
+    const mFrom = Skia.Matrix(); mFrom.scale(scaleX, scaleY); from.transform(mFrom);
+    const mTo   = Skia.Matrix(); mTo.scale(scaleX, scaleY);   to.transform(mTo);
+    return { from, to };
+  }, [cmd, scaleX, scaleY]);
+
+  const morphedPath = useDerivedValue(() => {
+    if (!morphFromTo) return Skia.Path.Make();
+    return interpolatePath(morphProgress.current, [0, 1], [morphFromTo.from, morphFromTo.to]);
+  }, [morphProgress, morphFromTo]);
+
   const renderShape = () => {
     switch (cmd.type) {
       case 'line':
@@ -193,17 +214,8 @@ const AnimatedCommand: React.FC<AnimCmdProps> = ({ cmd, scaleX, scaleY, preset }
         );
       }
       case 'morph_path': {
-        if (!cmd.fromD || !cmd.toD) return null;
-        const from = Skia.Path.MakeFromSVGString(cmd.fromD);
-        const to   = Skia.Path.MakeFromSVGString(cmd.toD);
-        if (!from || !to) return null;
-        const mFrom = Skia.Matrix(); mFrom.scale(scaleX, scaleY); from.transform(mFrom);
-        const mTo   = Skia.Matrix(); mTo.scale(scaleX, scaleY);   to.transform(mTo);
-        const morphed = useDerivedValue(
-          () => interpolatePath(morphProgress.current, [0, 1], [from, to]),
-          [morphProgress],
-        );
-        return <Path path={morphed} paint={paint} />;
+        if (!morphFromTo) return null;
+        return <Path path={morphedPath} paint={paint} />;
       }
       case 'text': {
         const tp = buildPaint({ ...cmd.paint, filled: true }, scaleX, scaleY);
