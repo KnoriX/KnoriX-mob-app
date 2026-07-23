@@ -5,13 +5,11 @@
 // WS for live events · FastAPI for heavy work
 // ─────────────────────────────────────────────────────────────
 
-import React, { useContext } from 'react';
-import { View, StyleSheet } from 'react-native';
+import React from 'react';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withTiming,
-  runOnJS,
 } from 'react-native-reanimated';
 
 import { useRealtimeSession } from '../../hooks/useRealtimeSession';
@@ -116,5 +114,3 @@ export default function RealtimeNode({ payload, onDone, ws }: Props) {
     </FadeCard>
   );
 }
-
-const styles = StyleSheet.create({});
