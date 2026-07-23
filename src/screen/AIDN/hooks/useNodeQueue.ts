@@ -50,6 +50,7 @@ function reducer(state: NodeQueueState, action: NodeQueueAction): NodeQueueState
     }
 
     case 'REMOVE': {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { [action.nodeId]: _removed, ...remaining } = state.nodes;
       return {
         nodes: remaining,
