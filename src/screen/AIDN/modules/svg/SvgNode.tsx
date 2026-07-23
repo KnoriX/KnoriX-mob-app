@@ -3,7 +3,6 @@ import {
   View,
   Text,
   TouchableOpacity,
-  Dimensions,
   Modal,
   ScrollView,
 } from 'react-native';
@@ -11,8 +10,6 @@ import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withTiming,
-  withRepeat,
-  withSequence,
   runOnJS,
   Easing,
 } from 'react-native-reanimated';
@@ -21,7 +18,7 @@ import { SvgXml } from 'react-native-svg';
 
 import { AIDNNode, SvgPayload, SvgHighlight, SvgTapZone } from '../../types/node.types';
 import { wsService } from '../../services/websocketService';
-import { svgStyles as S, CARD_WIDTH, CARD_HEIGHT } from './svgNode.styles';
+import { svgStyles as S } from './svgNode.styles';
 import { Colors } from '../../styles/token';
 
 // ─── Constants ────────────────────────────────────────────────────────────
@@ -236,16 +233,6 @@ export default function SvgNode({ node, onDone }: SvgNodeProps) {
     });
     return unsub;
   }, [node.id]);
-
-  // ── Handle tap from SvgXml (native mode) — match by elementId convention
-  //    For native SVG, wrap tappable elements in the SVG with onPress handlers
-  //    via a transparent overlay mapped to tapZone positions.
-  //    (Full native tap handling requires SVG element refs — WebView mode is
-  //     recommended for complex interactive diagrams.)
-  const handleNativeTap = useCallback((elementId: string) => {
-    const zone = tapZones.find(z => z.elementId === elementId);
-    if (zone) setActiveTapZone(zone);
-  }, [tapZones]);
 
   // ── Handle tap postMessage from WebView
   const handleWebViewMessage = useCallback((event: { nativeEvent: { data: string } }) => {
