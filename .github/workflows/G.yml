@@ -1,4 +1,4 @@
-name: Lent Types
+name: Lint & Typecheck
 on:
   workflow_dispatch:
     inputs:
