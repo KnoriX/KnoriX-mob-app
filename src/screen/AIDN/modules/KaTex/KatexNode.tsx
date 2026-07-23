@@ -3,7 +3,7 @@ import React, {
 } from 'react';
 import {
   View, Text, StyleSheet, Dimensions,
-  TouchableOpacity, ScrollView,
+  TouchableOpacity,
 } from 'react-native';
 import Animated, {
   useSharedValue, useAnimatedStyle,
@@ -13,7 +13,7 @@ import { WebView } from 'react-native-webview';
 
 import { Colors, Typography, Spacing, Radius } from '../../styles/token';
 import { buildKaTexHtml } from './Katexhtmlbuilder';
-import type { KaTexPayload, KaTexDisplayMode } from './Katexnode.types';
+import type { KaTexPayload } from './Katexnode.types';
 import type { NodeProps } from '../../types/node.types';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -98,7 +98,7 @@ const KaTexNode: React.FC<NodeProps<KaTexPayload>> = ({
         const h = Math.min(Math.max(msg.value, 80), CARD_HEIGHT * 2);
         setWebViewHeight(h);
       }
-    } catch (_) {}
+    } catch {}
   }, []);
 
   // ── Done / Skip ──
