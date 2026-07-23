@@ -1,79 +1,50 @@
 name: Build APK
 on:
-  push:
-    branches: [main]
+  workflow_dispatch:
+
 jobs:
-  build:
+  quality-check:
+    name: Lint, Typecheck & Tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+          cache: "npm"
+      - run: npm install --legacy-peer-deps
+      - run: npm run lint
+      - run: npx tsc --noEmit
+      - run: npm test -- --ci
+
+  build:
+    name: Build Release APK
+    needs: quality-check
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v5
       - uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: '22'
+          cache: 'npm'
+      - uses: gradle/actions/setup-gradle@v4
+
       - name: Install dependencies
-        run: |
-          npm cache clean --force
-          rm -rf node_modules
-          npm install --legacy-peer-deps
-      - name: Patch Reanimated compatibility for RN 0.86
-        run: |
-          node -e "
-          const fs = require('fs');
-          const path = 'node_modules/react-native-reanimated/compatibility.json';
-          const data = JSON.parse(fs.readFileSync(path, 'utf8'));
-          Object.keys(data).forEach(key => {
-            if (Array.isArray(data[key]['react-native'])) {
-              if (!data[key]['react-native'].includes('0.86')) {
-                data[key]['react-native'].push('0.86');
-              }
-            }
-          });
-          fs.writeFileSync(path, JSON.stringify(data, null, 2));
-          console.log('Patched Reanimated compatibility.json for RN 0.86');
-          "
-          node -e "
-          const fs = require('fs');
-          const path = 'node_modules/react-native-worklets/compatibility.json';
-          if (fs.existsSync(path)) {
-            const data = JSON.parse(fs.readFileSync(path, 'utf8'));
-            Object.keys(data).forEach(key => {
-              if (Array.isArray(data[key]['react-native'])) {
-                if (!data[key]['react-native'].includes('0.86')) {
-                  data[key]['react-native'].push('0.86');
-                }
-              }
-            });
-            fs.writeFileSync(path, JSON.stringify(data, null, 2));
-            console.log('Patched Worklets compatibility.json for RN 0.86');
-          }
-          "
-      - name: Fix react-native-track-player Bundle nullable error
-        run: |
-          FILE="node_modules/react-native-track-player/android/src/main/java/com/doublesymmetry/trackplayer/module/MusicModule.kt"
-          python3 - << 'EOF'
-          with open("node_modules/react-native-track-player/android/src/main/java/com/doublesymmetry/trackplayer/module/MusicModule.kt", "r") as f:
-              content = f.read()
-          content = content.replace(
-              "callback.resolve(Arguments.fromBundle(musicService.tracks[index].originalItem))",
-              "callback.resolve(musicService.tracks[index].originalItem?.let { Arguments.fromBundle(it) })"
-          )
-          content = content.replace(
-              "            else Arguments.fromBundle(\n                musicService.tracks[musicService.getCurrentTrackIndex()].originalItem\n            )",
-              "            else musicService.tracks[musicService.getCurrentTrackIndex()].originalItem?.let { Arguments.fromBundle(it) }"
-          )
-          with open("node_modules/react-native-track-player/android/src/main/java/com/doublesymmetry/trackplayer/module/MusicModule.kt", "w") as f:
-              f.write(content)
-          print("Track player fix applied successfully")
-          EOF
+        run: npm install --legacy-peer-deps
+        # patch-package runs automatically via postinstall — no inline patching needed
+
       - name: Make gradlew executable
         run: chmod +x android/gradlew
+
       - name: Setup Keystore
-        run: |
-          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/app/knorix-release.keystore
+        run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/app/knorix-release.keystore
+
       - name: Build Release APK
         env:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
@@ -81,11 +52,16 @@ jobs:
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
           cd android
-          ./gradlew assembleRelease \
+          ./gradlew assembleRelease --build-cache --parallel \
             -Pandroid.injected.signing.store.file=$GITHUB_WORKSPACE/android/app/knorix-release.keystore \
             -Pandroid.injected.signing.store.password=$KEYSTORE_PASSWORD \
             -Pandroid.injected.signing.key.alias=$KEY_ALIAS \
             -Pandroid.injected.signing.key.password=$KEY_PASSWORD
+
+      - name: Remove keystore file from workspace
+        if: always()
+        run: rm -f android/app/knorix-release.keystore
+
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
