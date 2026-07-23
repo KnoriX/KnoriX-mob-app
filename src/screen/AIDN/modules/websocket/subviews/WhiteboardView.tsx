@@ -18,10 +18,8 @@ import {
   Skia,
   SkPath,
   Text as SkText,
-  useFont,
   Circle,
   Rect,
-  Group,
   Paint,
 } from '@shopify/react-native-skia';
 import { Colors, Typography, Spacing, Radius } from '../../../styles/token';
