@@ -7,10 +7,20 @@ export interface MarkdownPayload {
 }
 
 export interface MCQPayload {
+  mode?: 'single' | 'multi';
   question: string;
   options: { id: string; text: string }[];
-  correctId?: string;     // only sent after student answers
+  correctId?: string;
+  correctIds?: string[];
   explanation?: string;
+  hint?: string;
+  timeLimit?: number;
+  tags?: string[];
+}
+
+export interface VideoChapter {
+  at: number;
+  title: string;
 }
 
 export interface VideoPayload {
@@ -18,25 +28,55 @@ export interface VideoPayload {
   autoPlay?: boolean;
   loop?: boolean;
   caption?: string;
+  muted?: boolean;
+  startAt?: number;
+  endAt?: number;
+  playbackRate?: number;
+  controlMode?: 'default' | 'minimal' | 'none';
+  resizeMode?: 'contain' | 'cover' | 'stretch';
+  chapters?: VideoChapter[];
+  subtitles?: { uri: string; language: string }[];
+  showSpeedControl?: boolean;
+  reportProgressInterval?: number;
+  thumbnail?: string;
 }
 
 export interface KatexPayload {
-  formula: string;        // LaTeX string
-  displayMode?: boolean;  // block vs inline
+  formula: string;
+  displayMode?: boolean;
 }
 
 export interface MermaidPayload {
-  definition: string;     // mermaid diagram DSL
+  definition: string;
 }
 
 export interface SkiaPayload {
-  animationData: Record<string, unknown>; // Lottie-like or custom Skia data
+  animationData: Record<string, unknown>;
   width?: number;
   height?: number;
 }
 
+export interface SvgHighlight {
+  targetId: string;
+  color?: string;
+  durationMs?: number;
+}
+
+export interface SvgTapZone {
+  id: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  label?: string;
+}
+
 export interface SvgPayload {
   svgString: string;
+  renderMode?: 'static' | 'interactive';
+  highlights?: SvgHighlight[];
+  tapZones?: SvgTapZone[];
+  caption?: string;
 }
 
 export interface AudioPayload {
@@ -46,8 +86,8 @@ export interface AudioPayload {
 }
 
 export interface RealtimePayload {
-  streamUrl: string;      // live websocket sub-channel or SSE url
-  renderAs: NodeType;     // what type to render streaming content as
+  streamUrl: string;
+  renderAs: NodeType;
 }
 
 export type NodePayload =
@@ -64,17 +104,26 @@ export type NodePayload =
 // ─── Core Node ────────────────────────────────────────────────────────────
 
 export interface AIDNNode {
-  id: string;                       // unique node id from backend
+  id: string;
   type: NodeType;
   payload: NodePayload;
-  layout?: LayoutMode;              // AI-decided layout hint
-  order: number;                    // render position
-  transition?: 'fade' | 'none';    // always 'fade' in your case
+  layout?: LayoutMode;
+  order: number;
+  transition?: 'fade' | 'none';
   meta?: {
     title?: string;
-    duration?: number;              // estimated read/view time in seconds
+    duration?: number;
     tags?: string[];
   };
+}
+
+// ─── Shared node component props ──────────────────────────────────────────
+
+export interface NodeProps<TPayload = NodePayload> {
+  node: AIDNNode;
+  payload: TPayload;
+  onDone: () => void;
+  onEvent?: (event: string, data?: Record<string, unknown>) => void;
 }
 
 // ─── Lesson Plan (REST response) ─────────────────────────────────────────
@@ -83,7 +132,7 @@ export interface LessonPlan {
   lessonId: string;
   title: string;
   nodes: AIDNNode[];
-  sessionToken: string;             // used for WS auth
+  sessionToken: string;
 }
 
 // ─── Renderer State ───────────────────────────────────────────────────────
@@ -92,5 +141,5 @@ export type NodeStatus = 'pending' | 'rendering' | 'done' | 'error';
 
 export interface RendererNode extends AIDNNode {
   status: NodeStatus;
-  opacity?: number;                 // for fade animation tracking
+  opacity?: number;
 }
