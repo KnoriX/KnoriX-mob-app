@@ -185,7 +185,7 @@ export function buildArrowPath(
 // ─── Easing functions ─────────────────────────────────────────────────────────
 
 import { Easing } from 'react-native-reanimated';
-import type { EasingType } from './skiaNode.types';
+import type { EasingType } from './SkiaNode.types';
 
 export function resolveEasing(type?: EasingType) {
   switch (type) {
