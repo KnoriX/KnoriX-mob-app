@@ -80,8 +80,8 @@ export function patchNode(existing: AIDNNode, patch: Partial<AIDNNode>): AIDNNod
 
 // ─── Helpers ──────────────────────────────────────────────────────────────
 
-function isValidLayout(val: unknown): val is AIDNNode['layout'] {
-  return typeof val === 'string' && Object.values(LAYOUT_MODES).includes(val as AIDNNode['layout']);
+function isValidLayout(val: unknown): val is LayoutMode {
+  return typeof val === 'string' && (Object.values(LAYOUT_MODES) as string[]).includes(val);
 }
 
 function parseMeta(raw: unknown): AIDNNode['meta'] {
