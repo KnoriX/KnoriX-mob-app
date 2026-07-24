@@ -1,5 +1,5 @@
 import { AIDNNode } from '../types/node.types';
-import { LAYOUT_MODES } from '../constants/nodeTypes';
+import { LAYOUT_MODES, LayoutMode } from '../constants/nodeTypes';
 import { isNodeSupported } from '../registry/nodeRegistry';
 
 /**
