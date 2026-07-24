@@ -364,13 +364,13 @@ const th = StyleSheet.create({
     borderWidth: 1, borderColor: Colors.accent,
     paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4,
   },
-  badgeText: { color: Colors.accent, fontSize: 10, fontFamily: Typography.semibold, letterSpacing: 1 },
-  chapterLabel: { color: Colors.textMuted, fontSize: 11, fontFamily: Typography.body },
+  badgeText: { color: Colors.accent, fontSize: 10, fontWeight: Typography.semibold.fontWeight, letterSpacing: 1 },
+  chapterLabel: { color: Colors.textMuted, fontSize: 11, fontWeight: Typography.body.fontWeight },
   skipBtn: { paddingHorizontal: 10, paddingVertical: 6 },
-  skipText: { color: Colors.textMuted, fontSize: 11, fontFamily: Typography.semibold, letterSpacing: 1 },
+  skipText: { color: Colors.textMuted, fontSize: 11, fontWeight: Typography.semibold.fontWeight, letterSpacing: 1 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: Spacing.sm },
-  loadingText: { color: Colors.textMuted, fontSize: 13, fontFamily: Typography.body },
-  errorText: { color: '#FF6B6B', fontSize: 13, fontFamily: Typography.body, textAlign: 'center', padding: Spacing.md },
+  loadingText: { color: Colors.textMuted, fontSize: 13, fontWeight: Typography.body.fontWeight },
+  errorText: { color: '#FF6B6B', fontSize: 13, fontWeight: Typography.body.fontWeight, textAlign: 'center', padding: Spacing.md },
   captionBar: {
     marginHorizontal: Spacing.md,
     backgroundColor: '#1A1A2E',
@@ -381,7 +381,7 @@ const th = StyleSheet.create({
   },
   captionText: {
     color: Colors.textPrimary,
-    fontSize: 13, fontFamily: Typography.body,
+    fontSize: 13, fontWeight: Typography.body.fontWeight,
     textAlign: 'center', lineHeight: 19,
   },
   chapterScroll: { maxHeight: 34, borderBottomWidth: 1, borderBottomColor: Colors.border },
@@ -391,7 +391,7 @@ const th = StyleSheet.create({
     paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12,
   },
   chapterChipActive: { borderColor: Colors.accent, backgroundColor: Colors.accent + '22' },
-  chapterChipText: { color: Colors.textMuted, fontSize: 11, fontFamily: Typography.body },
+  chapterChipText: { color: Colors.textMuted, fontSize: 11, fontWeight: Typography.body.fontWeight },
   chapterChipTextActive: { color: Colors.accent },
   seekRow: {
     flexDirection: 'row',
@@ -400,7 +400,7 @@ const th = StyleSheet.create({
     paddingHorizontal: Spacing.md,
     marginTop: Spacing.sm,
   },
-  timeLabel: { color: Colors.textMuted, fontSize: 11, fontFamily: Typography.mono, width: 36 },
+  timeLabel: { color: Colors.textMuted, fontSize: 11, fontFamily: Typography.mono.fontFamily, width: 36 },
   controls: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -410,7 +410,7 @@ const th = StyleSheet.create({
   },
   ctrlBtn: { alignItems: 'center', gap: 2 },
   ctrlIcon: { color: Colors.textSecondary, fontSize: 18 },
-  ctrlLabel: { color: Colors.textMuted, fontSize: 9, fontFamily: Typography.mono },
+  ctrlLabel: { color: Colors.textMuted, fontSize: 9, fontFamily: Typography.mono.fontFamily },
   playBtn: {
     width: 48, height: 48, borderRadius: 24,
     backgroundColor: Colors.accent,
@@ -429,5 +429,5 @@ const th = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: Colors.accent + '55',
   },
-  mcqOverlayText: { color: Colors.accent, fontSize: 13, fontFamily: Typography.semibold },
+  mcqOverlayText: { color: Colors.accent, fontSize: 13, fontWeight: Typography.semibold.fontWeight },
 });
